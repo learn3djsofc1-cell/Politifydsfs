@@ -1,8 +1,74 @@
 import { Router, Response } from 'express';
+import { GoogleGenAI } from '@google/genai';
 import pool from '../db.js';
 import { requireAuth, AuthRequest } from '../middleware.js';
 
 const router = Router();
+
+const ai = new GoogleGenAI({
+  apiKey: process.env.AI_INTEGRATIONS_GEMINI_API_KEY || '',
+  httpOptions: {
+    apiVersion: '',
+    baseUrl: process.env.AI_INTEGRATIONS_GEMINI_BASE_URL || '',
+  },
+});
+
+router.post('/parse-intent', requireAuth, async (req: AuthRequest, res: Response) => {
+  try {
+    const { message } = req.body;
+
+    if (!message || typeof message !== 'string') {
+      res.status(400).json({ error: 'Message is required' });
+      return;
+    }
+
+    if (message.length > 500) {
+      res.json({ type: 'text' });
+      return;
+    }
+
+    const prompt = `You are a payment intent parser for a crypto chat banking app. Analyze the user's message and determine if they want to send a payment.
+
+RULES:
+- If the message is a payment intent (send, transfer, pay, kirim, bayar, etc), extract the amount and token (SOL or USDC).
+- If no token is specified, default to USDC.
+- If no amount is specified, return type "text".
+- Only return valid JSON, nothing else.
+
+RESPOND WITH EXACTLY ONE OF:
+{"type":"payment","amount":<number>,"token":"SOL"} 
+{"type":"payment","amount":<number>,"token":"USDC"}
+{"type":"text"}
+
+User message: "${message.replace(/"/g, '\\"')}"`;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+      config: {
+        maxOutputTokens: 100,
+        temperature: 0,
+      },
+    });
+
+    const text = (response.text || '').trim();
+    const jsonMatch = text.match(/\{[^}]+\}/);
+    
+    if (jsonMatch) {
+      const parsed = JSON.parse(jsonMatch[0]);
+      if (parsed.type === 'payment' && typeof parsed.amount === 'number' && parsed.amount > 0) {
+        const token = parsed.token === 'SOL' ? 'SOL' : 'USDC';
+        res.json({ type: 'payment', amount: parsed.amount, token });
+        return;
+      }
+    }
+    
+    res.json({ type: 'text' });
+  } catch (err) {
+    console.error('Parse intent error:', err);
+    res.json({ type: 'text' });
+  }
+});
 
 router.get('/conversations', requireAuth, async (req: AuthRequest, res: Response) => {
   try {

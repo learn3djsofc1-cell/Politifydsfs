@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import {
-  Search, MessageSquare, Send, Plus, DollarSign,
+  Search, MessageSquare, Send, Plus,
   ChevronLeft, ExternalLink, Loader2, AlertCircle,
-  Check, X, Coins
+  Check, X, Coins, Bot, ShieldCheck
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -38,6 +38,12 @@ interface SearchResult {
   username: string;
 }
 
+interface PendingPayment {
+  amount: number;
+  token: 'SOL' | 'USDC';
+  originalMessage: string;
+}
+
 const container = {
   hidden: { opacity: 0 },
   show: { opacity: 1, transition: { staggerChildren: 0.06 } },
@@ -61,12 +67,12 @@ export const ChatPage = () => {
   const [searching, setSearching] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [loadingConversations, setLoadingConversations] = useState(true);
-  const [showPayment, setShowPayment] = useState(false);
-  const [paymentToken, setPaymentToken] = useState<'SOL' | 'USDC'>('SOL');
-  const [paymentAmount, setPaymentAmount] = useState('');
-  const [paymentPassword, setPaymentPassword] = useState('');
+  const [pendingPayment, setPendingPayment] = useState<PendingPayment | null>(null);
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [sendingPayment, setSendingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+  const [parsingIntent, setParsingIntent] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const pollRef = useRef<NodeJS.Timeout | null>(null);
@@ -125,7 +131,7 @@ export const ChatPage = () => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [messages]);
+  }, [messages, pendingPayment]);
 
   useEffect(() => {
     if (!searchQuery || searchQuery.length < 2) {
@@ -181,8 +187,8 @@ export const ChatPage = () => {
     } catch { /* silent */ }
   };
 
-  const sendMessage = async () => {
-    if (!token || !activeConversation || !messageText.trim() || sendingMessage) return;
+  const sendTextMessage = async (text: string) => {
+    if (!token || !activeConversation) return;
     setSendingMessage(true);
     try {
       const res = await fetch(`/api/chat/conversations/${activeConversation.id}/messages`, {
@@ -191,10 +197,9 @@ export const ChatPage = () => {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ content: messageText.trim() }),
+        body: JSON.stringify({ content: text }),
       });
       if (res.ok) {
-        setMessageText('');
         await fetchMessages(activeConversation.id);
         await fetchConversations();
       }
@@ -203,13 +208,46 @@ export const ChatPage = () => {
     }
   };
 
-  const sendPayment = async () => {
-    if (!token || !activeConversation || !paymentAmount || !paymentPassword || sendingPayment) return;
-    const amount = parseFloat(paymentAmount);
-    if (isNaN(amount) || amount <= 0) {
-      setPaymentError('Enter a valid amount');
-      return;
+  const sendMessage = async () => {
+    if (!token || !activeConversation || !messageText.trim() || sendingMessage || parsingIntent) return;
+    const text = messageText.trim();
+    setMessageText('');
+    setParsingIntent(true);
+
+    try {
+      const intentRes = await fetch('/api/chat/parse-intent', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message: text }),
+      });
+
+      if (intentRes.ok) {
+        const intent = await intentRes.json();
+        if (intent.type === 'payment' && intent.amount > 0) {
+          setPendingPayment({
+            amount: intent.amount,
+            token: intent.token,
+            originalMessage: text,
+          });
+          setPaymentError('');
+          setConfirmPassword('');
+          setParsingIntent(false);
+          return;
+        }
+      }
+    } catch {
+      /* AI parsing failed, send as normal text */
     }
+
+    setParsingIntent(false);
+    await sendTextMessage(text);
+  };
+
+  const confirmPayment = async () => {
+    if (!token || !activeConversation || !pendingPayment || !confirmPassword || sendingPayment) return;
     setSendingPayment(true);
     setPaymentError('');
     try {
@@ -221,9 +259,9 @@ export const ChatPage = () => {
         },
         body: JSON.stringify({
           receiverId: activeConversation.other_user_id,
-          amount,
-          token: paymentToken,
-          password: paymentPassword,
+          amount: pendingPayment.amount,
+          token: pendingPayment.token,
+          password: confirmPassword,
           conversationId: activeConversation.id,
         }),
       });
@@ -232,10 +270,11 @@ export const ChatPage = () => {
         setPaymentError(data.error || 'Transaction failed');
         return;
       }
-      setShowPayment(false);
-      setPaymentAmount('');
-      setPaymentPassword('');
+      setPendingPayment(null);
+      setConfirmPassword('');
       setPaymentError('');
+      setSuccessMessage(`${pendingPayment.amount} ${pendingPayment.token} sent successfully!`);
+      setTimeout(() => setSuccessMessage(''), 4000);
       await fetchMessages(activeConversation.id);
       await fetchConversations();
     } catch {
@@ -245,11 +284,30 @@ export const ChatPage = () => {
     }
   };
 
+  const cancelPayment = () => {
+    if (pendingPayment) {
+      setMessageText(pendingPayment.originalMessage);
+    }
+    setPendingPayment(null);
+    setConfirmPassword('');
+    setPaymentError('');
+  };
+
+  const sendAsText = async () => {
+    if (!pendingPayment) return;
+    const text = pendingPayment.originalMessage;
+    setPendingPayment(null);
+    setConfirmPassword('');
+    setPaymentError('');
+    await sendTextMessage(text);
+  };
+
   const selectConversation = (conv: Conversation) => {
     setActiveConversation(conv);
     setShowConversation(true);
-    setShowPayment(false);
+    setPendingPayment(null);
     setPaymentError('');
+    setSuccessMessage('');
   };
 
   const formatTime = (dateStr: string) => {
@@ -405,22 +463,20 @@ export const ChatPage = () => {
         }`}
       >
         {!activeConversation ? (
-          <>
-            <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">
-              <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-[#9945FF]/10 to-[#14F195]/10 flex items-center justify-center mb-6">
-                <MessageSquare className="w-10 h-10 text-gray-400" />
-              </div>
-              <h2 className="text-xl font-bold text-gray-700 mb-2">Select a conversation</h2>
-              <p className="text-gray-500 text-sm max-w-sm">
-                Choose a contact from the sidebar or start a new conversation to begin chatting and sending payments.
-              </p>
+          <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">
+            <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-[#9945FF]/10 to-[#14F195]/10 flex items-center justify-center mb-6">
+              <MessageSquare className="w-10 h-10 text-gray-400" />
             </div>
-          </>
+            <h2 className="text-xl font-bold text-gray-700 mb-2">Select a conversation</h2>
+            <p className="text-gray-500 text-sm max-w-sm">
+              Choose a contact from the sidebar or start a new conversation. Type naturally to send payments — e.g. "send 10 USDC" or "transfer 0.5 SOL".
+            </p>
+          </div>
         ) : (
           <>
             <div className="flex items-center gap-3 p-4 border-b border-gray-200 bg-white">
               <button
-                onClick={() => { setShowConversation(false); setShowPayment(false); }}
+                onClick={() => { setShowConversation(false); setPendingPayment(null); }}
                 className="lg:hidden w-9 h-9 rounded-xl bg-gray-100 text-gray-500 flex items-center justify-center hover:bg-gray-200 transition-colors"
               >
                 <ChevronLeft className="w-5 h-5" />
@@ -434,20 +490,30 @@ export const ChatPage = () => {
                   <span className="ml-2 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700">Testnet</span>
                 )}
               </div>
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#9945FF]/5">
+                <Bot className="w-3.5 h-3.5 text-[#9945FF]" />
+                <span className="text-[10px] font-medium text-[#9945FF]">AI Assisted</span>
+              </div>
             </div>
 
             <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 space-y-3">
-              {messages.length === 0 && (
+              {messages.length === 0 && !pendingPayment && (
                 <div className="text-center py-8">
-                  <p className="text-sm text-gray-400">Start the conversation by sending a message</p>
+                  <div className="w-12 h-12 rounded-2xl bg-[#9945FF]/10 flex items-center justify-center mx-auto mb-3">
+                    <Bot className="w-6 h-6 text-[#9945FF]" />
+                  </div>
+                  <p className="text-sm text-gray-500 mb-1">AI-powered chat banking</p>
+                  <p className="text-xs text-gray-400 max-w-xs mx-auto">
+                    Type naturally to send payments. Try "send 10 USDC" or "transfer 0.5 SOL". Regular messages work too!
+                  </p>
                 </div>
               )}
+
               {messages.map((msg) => {
                 const isMe = msg.sender_id === user?.id;
                 const isPayment = msg.message_type === 'payment';
 
                 if (isPayment) {
-                  const isSender = isMe;
                   return (
                     <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
                       <div className={`max-w-[320px] rounded-2xl p-4 ${
@@ -456,7 +522,7 @@ export const ChatPage = () => {
                         <div className="flex items-center gap-2 mb-2">
                           <Coins className={`w-4 h-4 ${isMe ? 'text-white/70' : 'text-[#9945FF]'}`} />
                           <span className={`text-xs font-medium ${isMe ? 'text-white/70' : 'text-gray-500'}`}>
-                            {isSender ? 'Payment Sent' : 'Payment Received'}
+                            {isMe ? 'Payment Sent' : 'Payment Received'}
                           </span>
                         </div>
                         <div className="flex items-baseline gap-2 mb-2">
@@ -519,119 +585,153 @@ export const ChatPage = () => {
                   </div>
                 );
               })}
+
+              <AnimatePresence>
+                {pendingPayment && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 16, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -8, scale: 0.95 }}
+                    className="flex justify-start"
+                  >
+                    <div className="max-w-[340px] rounded-2xl bg-white border-2 border-[#9945FF]/20 shadow-lg overflow-hidden">
+                      <div className="bg-gradient-to-r from-[#9945FF]/5 to-[#14F195]/5 px-4 py-3 border-b border-gray-100">
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-lg bg-[#9945FF]/10 flex items-center justify-center">
+                            <Bot className="w-4 h-4 text-[#9945FF]" />
+                          </div>
+                          <div>
+                            <span className="text-xs font-semibold text-gray-900">SendlyFi AI</span>
+                            <span className="text-[10px] text-gray-400 ml-1.5">Payment detected</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="p-4">
+                        <p className="text-sm text-gray-700 mb-3">
+                          You want to send <span className="font-bold text-gray-900">{pendingPayment.amount} {pendingPayment.token}</span> to <span className="font-bold text-[#9945FF]">@{activeConversation.other_username}</span>
+                        </p>
+
+                        <div className="bg-gray-50 rounded-xl p-3 mb-3">
+                          <div className="flex items-center justify-between text-sm mb-1">
+                            <span className="text-gray-500">Amount</span>
+                            <span className="font-bold text-gray-900">{pendingPayment.amount} {pendingPayment.token}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-sm mb-1">
+                            <span className="text-gray-500">To</span>
+                            <span className="font-medium text-gray-900">@{activeConversation.other_username}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-gray-500">Network</span>
+                            <span className={`font-medium ${isTestnet ? 'text-amber-600' : 'text-green-600'}`}>
+                              {isTestnet ? 'Testnet' : 'Mainnet'}
+                            </span>
+                          </div>
+                        </div>
+
+                        {paymentError && (
+                          <div className="flex items-center gap-2 p-2.5 rounded-xl bg-red-50 border border-red-200 mb-3">
+                            <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
+                            <span className="text-xs text-red-700">{paymentError}</span>
+                          </div>
+                        )}
+
+                        <input
+                          type="password"
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          onKeyDown={(e) => { if (e.key === 'Enter') confirmPayment(); }}
+                          placeholder="Enter password to confirm"
+                          autoFocus
+                          className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-[#9945FF]/40 focus:ring-2 focus:ring-[#9945FF]/10 transition-all mb-3"
+                        />
+
+                        <div className="flex gap-2">
+                          <button
+                            onClick={cancelPayment}
+                            disabled={sendingPayment}
+                            className="py-2.5 px-3 rounded-xl bg-gray-100 text-gray-600 text-sm font-medium hover:bg-gray-200 transition-colors disabled:opacity-50"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            onClick={sendAsText}
+                            disabled={sendingPayment || sendingMessage}
+                            className="py-2.5 px-3 rounded-xl bg-gray-50 border border-gray-200 text-gray-500 text-xs font-medium hover:bg-gray-100 transition-colors disabled:opacity-50"
+                          >
+                            Send as text
+                          </button>
+                          <button
+                            onClick={confirmPayment}
+                            disabled={sendingPayment || !confirmPassword}
+                            className="flex-1 py-2.5 rounded-xl bg-[#9945FF] text-white text-sm font-medium hover:bg-[#8030E0] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                          >
+                            {sendingPayment ? (
+                              <>
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                Sending...
+                              </>
+                            ) : (
+                              <>
+                                <ShieldCheck className="w-4 h-4" />
+                                Confirm & Send
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <AnimatePresence>
+                {successMessage && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="flex justify-center"
+                  >
+                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-50 border border-green-200">
+                      <Check className="w-4 h-4 text-green-600" />
+                      <span className="text-sm font-medium text-green-700">{successMessage}</span>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               <div ref={messagesEndRef} />
             </div>
 
-            {showPayment && (
-              <div className="border-t border-gray-200 p-4 bg-white">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-semibold text-gray-900">Send Payment</h3>
-                  <button
-                    onClick={() => { setShowPayment(false); setPaymentError(''); }}
-                    className="p-1 text-gray-400 hover:text-gray-600"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-
-                {paymentError && (
-                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-red-50 border border-red-200 mb-3">
-                    <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
-                    <span className="text-xs text-red-700">{paymentError}</span>
-                  </div>
-                )}
-
-                <div className="flex gap-2 mb-3">
-                  <button
-                    onClick={() => setPaymentToken('SOL')}
-                    className={`flex-1 py-2 rounded-xl text-sm font-medium transition-colors ${
-                      paymentToken === 'SOL'
-                        ? 'bg-[#9945FF]/10 text-[#9945FF] border border-[#9945FF]/30'
-                        : 'bg-gray-50 text-gray-600 border border-gray-200'
-                    }`}
-                  >
-                    SOL
-                  </button>
-                  <button
-                    onClick={() => setPaymentToken('USDC')}
-                    className={`flex-1 py-2 rounded-xl text-sm font-medium transition-colors ${
-                      paymentToken === 'USDC'
-                        ? 'bg-[#14F195]/10 text-[#0DAA6D] border border-[#14F195]/30'
-                        : 'bg-gray-50 text-gray-600 border border-gray-200'
-                    }`}
-                  >
-                    USDC
-                  </button>
-                </div>
-
-                <input
-                  type="number"
-                  value={paymentAmount}
-                  onChange={(e) => setPaymentAmount(e.target.value)}
-                  placeholder={`Amount in ${paymentToken}`}
-                  step={paymentToken === 'SOL' ? '0.0001' : '0.01'}
-                  min="0"
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-[#9945FF]/40 focus:ring-2 focus:ring-[#9945FF]/10 transition-all mb-3"
-                />
-
-                <input
-                  type="password"
-                  value={paymentPassword}
-                  onChange={(e) => setPaymentPassword(e.target.value)}
-                  placeholder="Enter password to confirm"
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-[#9945FF]/40 focus:ring-2 focus:ring-[#9945FF]/10 transition-all mb-3"
-                />
-
-                <button
-                  onClick={sendPayment}
-                  disabled={sendingPayment || !paymentAmount || !paymentPassword}
-                  className="w-full py-2.5 rounded-xl bg-[#9945FF] text-white text-sm font-medium hover:bg-[#8030E0] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                  {sendingPayment ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Sending...
-                    </>
-                  ) : (
-                    <>
-                      <Send className="w-4 h-4" />
-                      Send {paymentAmount || '0'} {paymentToken}
-                    </>
-                  )}
-                </button>
-              </div>
-            )}
-
             <div className="border-t border-gray-200 p-4 bg-white">
               <div className="flex items-center gap-2">
-                <button
-                  onClick={() => { setShowPayment(!showPayment); setPaymentError(''); }}
-                  className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors flex-shrink-0 ${
-                    showPayment
-                      ? 'bg-[#9945FF]/10 text-[#9945FF]'
-                      : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-                  }`}
-                >
-                  <DollarSign className="w-5 h-5" />
-                </button>
                 <div className="flex-1 relative">
                   <input
                     type="text"
                     value={messageText}
                     onChange={(e) => setMessageText(e.target.value)}
                     onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
-                    placeholder="Type a message..."
-                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-[#9945FF]/40 focus:ring-2 focus:ring-[#9945FF]/10 transition-all"
+                    placeholder='Type a message or "send 10 USDC"...'
+                    disabled={parsingIntent}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-[#9945FF]/40 focus:ring-2 focus:ring-[#9945FF]/10 transition-all disabled:opacity-50"
                   />
                 </div>
                 <button
                   onClick={sendMessage}
-                  disabled={!messageText.trim() || sendingMessage}
+                  disabled={!messageText.trim() || sendingMessage || parsingIntent}
                   className="w-9 h-9 rounded-xl bg-[#9945FF] text-white flex items-center justify-center hover:bg-[#8030E0] transition-colors flex-shrink-0 disabled:opacity-50"
                 >
-                  <Send className="w-4 h-4" />
+                  {parsingIntent ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Send className="w-4 h-4" />
+                  )}
                 </button>
               </div>
+              <p className="text-[10px] text-gray-400 mt-1.5 text-center">
+                AI detects payment intents automatically
+              </p>
             </div>
           </>
         )}

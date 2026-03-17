@@ -76,7 +76,7 @@ src/
       CreateWalletPage.tsx       # Solana wallet creation with private key reveal + Phantom import instructions
       WalletsPage.tsx            # Wallet detail page: address, SOL/USDC balances, USD conversion, copy, Explorer link
       OverviewPage.tsx           # Live wallet balance (SOL/USDC via Helius RPC), USD prices, quick actions, income/spending, activity
-      ChatPage.tsx               # Full chat: user search, conversations, messaging, send money (SOL/USDC), payment bubbles, airdrop
+      ChatPage.tsx               # AI-powered chat: Gemini intent detection, natural language payments ("send 10 USDC"), inline confirmation cards, password auth
       CardsPage.tsx              # Virtual cards management with empty state
       PaymentsPage.tsx           # Scheduled payments with empty state
       SettingsPage.tsx           # Profile, security, preferences settings
@@ -109,7 +109,8 @@ vite.config.ts
 - `PGHOST`, `PGDATABASE`, `PGUSER`, `PGPASSWORD`, `PGPORT` — Individual PG vars
 - `JWT_SECRET` — Secret for signing JWT tokens (auto-generated if not set)
 - `SOLANA_RPC_URL` — Solana RPC endpoint (defaults to devnet: https://api.devnet.solana.com)
-- `GEMINI_API_KEY` — Required for Gemini AI API calls (set via Replit Secrets)
+- `AI_INTEGRATIONS_GEMINI_API_KEY` — Gemini API key (set via Replit AI Integrations)
+- `AI_INTEGRATIONS_GEMINI_BASE_URL` — Gemini base URL (set via Replit AI Integrations)
 - `APP_URL` — URL where the app is hosted
 
 ## Database Schema
@@ -148,6 +149,7 @@ Configured as a **static** deployment:
 - `POST /api/chat/conversations` — create or get existing conversation with another user
 - `GET /api/chat/conversations/:id/messages` — get messages with pagination (before cursor)
 - `POST /api/chat/conversations/:id/messages` — send a text message
+- `POST /api/chat/parse-intent` — AI-powered intent parsing via Gemini 2.5 Flash; detects payment intents from natural language, returns `{type:"payment",amount,token}` or `{type:"text"}`
 - `POST /api/transactions/send` — send SOL/USDC (testnet: DB balance transfer, instant confirmed; mainnet: on-chain Solana transfer with async confirmation)
 - `GET /api/transactions/:id` — get transaction details
 
