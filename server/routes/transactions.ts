@@ -1,7 +1,7 @@
 import { Router, Response } from 'express';
 import {
   Connection, PublicKey, Keypair, Transaction,
-  SystemProgram, LAMPORTS_PER_SOL, sendAndConfirmTransaction
+  SystemProgram, LAMPORTS_PER_SOL
 } from '@solana/web3.js';
 import {
   getOrCreateAssociatedTokenAccount,
@@ -36,6 +36,37 @@ function getHeliusRpcUrl(networkMode: string): string {
 
 function getUsdcMint(networkMode: string): string {
   return networkMode === 'mainnet-beta' ? USDC_MINT_MAINNET : USDC_MINT_DEVNET;
+}
+
+async function confirmTransactionAsync(transactionId: number, signature: string, networkMode: string) {
+  const rpcUrl = getHeliusRpcUrl(networkMode);
+  const connection = new Connection(rpcUrl, 'confirmed');
+  const maxAttempts = 30;
+  const delayMs = 2000;
+
+  for (let i = 0; i < maxAttempts; i++) {
+    try {
+      const status = await connection.getSignatureStatus(signature);
+      if (status?.value) {
+        if (status.value.err) {
+          await pool.query("UPDATE transactions SET status = 'failed' WHERE id = $1", [transactionId]);
+          console.log(`Transaction ${transactionId} failed on-chain`);
+          return;
+        }
+        if (status.value.confirmationStatus === 'confirmed' || status.value.confirmationStatus === 'finalized') {
+          await pool.query("UPDATE transactions SET status = 'confirmed' WHERE id = $1", [transactionId]);
+          console.log(`Transaction ${transactionId} confirmed`);
+          return;
+        }
+      }
+    } catch (err) {
+      console.error(`Confirmation poll error for tx ${transactionId}:`, err);
+    }
+    await new Promise(resolve => setTimeout(resolve, delayMs));
+  }
+
+  await pool.query("UPDATE transactions SET status = 'failed' WHERE id = $1", [transactionId]);
+  console.log(`Transaction ${transactionId} timed out waiting for confirmation`);
 }
 
 router.post('/send', requireAuth, async (req: AuthRequest, res: Response) => {
@@ -114,11 +145,17 @@ router.post('/send', requireAuth, async (req: AuthRequest, res: Response) => {
 
     if (conversationId) {
       const convCheck = await pool.query(
-        'SELECT id FROM conversations WHERE id = $1 AND (user1_id = $2 OR user2_id = $2)',
+        'SELECT user1_id, user2_id FROM conversations WHERE id = $1 AND (user1_id = $2 OR user2_id = $2)',
         [conversationId, userId]
       );
       if (convCheck.rows.length === 0) {
         res.status(403).json({ error: 'Not authorized to send in this conversation' });
+        return;
+      }
+      const conv = convCheck.rows[0];
+      const otherUserId = conv.user1_id === userId ? conv.user2_id : conv.user1_id;
+      if (otherUserId !== receiverId) {
+        res.status(400).json({ error: 'Receiver must be the other participant in this conversation' });
         return;
       }
     }
@@ -165,9 +202,11 @@ router.post('/send', requireAuth, async (req: AuthRequest, res: Response) => {
           })
         );
 
-        signature = await sendAndConfirmTransaction(connection, tx, [senderKeypair], {
-          commitment: 'confirmed',
-        });
+        const { blockhash } = await connection.getLatestBlockhash('confirmed');
+        tx.recentBlockhash = blockhash;
+        tx.feePayer = senderKeypair.publicKey;
+        tx.sign(senderKeypair);
+        signature = await connection.sendRawTransaction(tx.serialize());
       } else {
         const usdcMint = new PublicKey(getUsdcMint(networkMode));
         const rawAmount = BigInt(Math.round(amount * Math.pow(10, USDC_DECIMALS)));
@@ -207,20 +246,24 @@ router.post('/send', requireAuth, async (req: AuthRequest, res: Response) => {
           )
         );
 
-        signature = await sendAndConfirmTransaction(connection, tx, [senderKeypair], {
-          commitment: 'confirmed',
-        });
+        const { blockhash } = await connection.getLatestBlockhash('confirmed');
+        tx.recentBlockhash = blockhash;
+        tx.feePayer = senderKeypair.publicKey;
+        tx.sign(senderKeypair);
+        signature = await connection.sendRawTransaction(tx.serialize());
       }
 
       await pool.query(
-        "UPDATE transactions SET status = 'confirmed', tx_signature = $1 WHERE id = $2",
+        "UPDATE transactions SET tx_signature = $1 WHERE id = $2",
         [signature, transactionId]
       );
+
+      confirmTransactionAsync(transactionId, signature, networkMode);
 
       res.json({
         transactionId,
         signature,
-        status: 'confirmed',
+        status: 'pending',
         amount,
         token,
         network: networkMode,
