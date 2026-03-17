@@ -101,9 +101,7 @@ export const WalletsPage = () => {
   const usdcUsd = prices ? usdcBalance * prices.usdc : 0;
   const totalUsd = solUsd + usdcUsd;
 
-  const explorerBase = isTestnet
-    ? 'https://explorer.solana.com/address/'
-    : 'https://explorer.solana.com/address/';
+  const explorerBase = 'https://explorer.solana.com/address/';
   const explorerSuffix = isTestnet ? '?cluster=devnet' : '';
 
   if (loading) {

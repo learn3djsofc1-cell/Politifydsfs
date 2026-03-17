@@ -22,6 +22,7 @@ export const DashboardLayout = () => {
   const location = useLocation();
   const { user, token, refreshUser } = useAuth();
   const [networkSwitching, setNetworkSwitching] = useState(false);
+  const [networkError, setNetworkError] = useState(false);
 
   const networkMode = user?.networkMode || 'devnet';
   const isTestnet = networkMode === 'devnet';
@@ -29,6 +30,7 @@ export const DashboardLayout = () => {
   const toggleNetwork = useCallback(async () => {
     if (!token || networkSwitching) return;
     setNetworkSwitching(true);
+    setNetworkError(false);
     const newMode = isTestnet ? 'mainnet-beta' : 'devnet';
     try {
       const res = await fetch('/api/user/network-mode', {
@@ -42,7 +44,8 @@ export const DashboardLayout = () => {
       if (!res.ok) throw new Error('Network switch failed');
       await refreshUser();
     } catch {
-      console.error('Failed to switch network');
+      setNetworkError(true);
+      setTimeout(() => setNetworkError(false), 3000);
     } finally {
       setNetworkSwitching(false);
     }
@@ -166,13 +169,18 @@ export const DashboardLayout = () => {
             </span>
           </div>
           <div className="flex items-center gap-3">
+            {networkError && (
+              <span className="text-xs text-red-500 font-medium">Switch failed</span>
+            )}
             <button
               onClick={toggleNetwork}
               disabled={networkSwitching}
               className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                isTestnet
-                  ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
-                  : 'bg-green-100 text-green-700 hover:bg-green-200'
+                networkError
+                  ? 'bg-red-100 text-red-700'
+                  : isTestnet
+                    ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
+                    : 'bg-green-100 text-green-700 hover:bg-green-200'
               } ${networkSwitching ? 'opacity-50' : ''}`}
             >
               <span className={`w-2 h-2 rounded-full ${isTestnet ? 'bg-amber-500' : 'bg-green-500'}`} />
