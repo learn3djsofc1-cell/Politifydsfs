@@ -146,22 +146,20 @@ export const DashboardLayout = () => {
         </div>
       </aside>
 
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-xl border-b border-gray-200 overflow-hidden">
-        <div className="flex items-center justify-between px-3 h-14 gap-2">
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-xl border-b border-gray-200">
+        <div className="flex items-center justify-between px-3 sm:px-4 h-14 gap-3">
           <Link to="/" className="flex items-center gap-2 shrink-0">
             <Logo className="w-6 h-6" />
             <span className="font-bold text-base tracking-tight">SendlyFi</span>
           </Link>
-          <div className="flex items-center gap-1.5 min-w-0">
-            <div className="min-w-0 overflow-hidden">
-              <NetworkSelector
-                isTestnet={isTestnet}
-                networkSwitching={networkSwitching}
-                networkError={networkError}
-                onSwitch={switchNetwork}
-                size="compact"
-              />
-            </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <NetworkSelector
+              isTestnet={isTestnet}
+              networkSwitching={networkSwitching}
+              networkError={networkError}
+              onSwitch={switchNetwork}
+              size="compact"
+            />
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
               className="p-2 text-gray-500 hover:text-gray-900 shrink-0"
@@ -270,14 +268,14 @@ export const DashboardLayout = () => {
       </div>
 
       <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-xl border-t border-gray-200">
-        <div className="flex items-center justify-around px-2 py-2">
-          {navItems.filter(i => i.label !== 'Wallets').map((item) => (
+        <div className="flex items-center justify-around px-1 py-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))]">
+          {navItems.filter(i => ['Overview', 'Chat', 'Cards', 'Settings'].includes(i.label)).map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
               end={item.end}
               className={({ isActive }) =>
-                `flex flex-col items-center gap-1 px-3 py-2 rounded-xl text-xs font-medium transition-all ${
+                `flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-xl text-[11px] font-medium transition-all min-w-0 ${
                   isActive
                     ? 'text-[#9945FF]'
                     : 'text-gray-400 hover:text-gray-600'
@@ -285,7 +283,7 @@ export const DashboardLayout = () => {
               }
             >
               <item.icon className="w-5 h-5" />
-              <span>{item.label}</span>
+              <span className="truncate">{item.label}</span>
             </NavLink>
           ))}
         </div>

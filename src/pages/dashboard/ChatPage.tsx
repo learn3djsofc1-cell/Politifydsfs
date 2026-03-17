@@ -423,7 +423,7 @@ export const ChatPage = () => {
       variants={container}
       initial="hidden"
       animate="show"
-      className="h-[calc(100vh-3.5rem)] lg:h-screen flex overflow-hidden"
+      className="h-[calc(100vh-3.5rem-3.5rem)] lg:h-screen flex overflow-hidden"
     >
       <motion.div
         variants={item}

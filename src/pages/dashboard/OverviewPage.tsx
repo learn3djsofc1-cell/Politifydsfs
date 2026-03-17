@@ -215,10 +215,10 @@ export const OverviewPage = () => {
         <div className="absolute bottom-0 left-0 w-48 h-48 bg-[#14F195] rounded-full blur-[100px] opacity-15 pointer-events-none" />
 
         <div className="relative z-10">
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
             <div className="flex items-center gap-2 text-white/70 text-sm">
-              <Wallet className="w-4 h-4" />
-              Total Balance
+              <Wallet className="w-4 h-4 shrink-0" />
+              <span>Total Balance</span>
               {isTestnet && (
                 <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-400/20 text-amber-200 uppercase">
                   Testnet
@@ -253,22 +253,22 @@ export const OverviewPage = () => {
               <div className="h-12 w-48 bg-white/10 rounded-lg animate-pulse" />
             ) : (
               <>
-                <span className="text-4xl lg:text-5xl font-bold tracking-tight text-white">
+                <span className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-white">
                   ${totalUsd.toFixed(2)}
                 </span>
                 <span className="text-white/50 text-lg">USD</span>
               </>
             )}
           </div>
-          <div className="flex items-center gap-4 mt-3">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 mt-3">
             <div className="flex items-center gap-1.5 text-white/60 text-sm">
-              <Coins className="w-4 h-4" />
-              {solBalance.toFixed(4)} SOL
+              <Coins className="w-4 h-4 shrink-0" />
+              <span>{solBalance.toFixed(4)} SOL</span>
               {prices && <span className="text-white/40">(${solUsd.toFixed(2)})</span>}
             </div>
             <div className="flex items-center gap-1.5 text-white/60 text-sm">
-              <DollarSign className="w-4 h-4" />
-              {usdcBalance.toFixed(2)} USDC
+              <DollarSign className="w-4 h-4 shrink-0" />
+              <span>{usdcBalance.toFixed(2)} USDC</span>
               {prices && <span className="text-white/40">(${usdcUsd.toFixed(2)})</span>}
             </div>
           </div>

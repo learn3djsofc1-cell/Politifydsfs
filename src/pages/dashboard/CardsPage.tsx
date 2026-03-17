@@ -192,7 +192,7 @@ export const CardsPage = () => {
       animate="show"
       className="p-4 lg:p-8 max-w-[1200px] w-full mx-auto overflow-x-hidden"
     >
-      <motion.div variants={item} className="flex items-center justify-between mb-8">
+      <motion.div variants={item} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-8">
         <div>
           <h1 className="text-2xl lg:text-3xl font-bold tracking-tight text-gray-900">Cards</h1>
           <p className="text-gray-600 text-sm mt-1">Manage your virtual debit cards</p>
@@ -205,7 +205,7 @@ export const CardsPage = () => {
               else setCreateType('mastercard');
               setShowCreateModal(true);
             }}
-            className="px-4 py-2.5 rounded-xl bg-[#9945FF] text-white text-sm font-medium hover:bg-[#8030E0] transition-colors flex items-center gap-2"
+            className="px-4 py-2.5 rounded-xl bg-[#9945FF] text-white text-sm font-medium hover:bg-[#8030E0] transition-colors flex items-center gap-2 self-start sm:self-auto shrink-0"
           >
             <Plus className="w-4 h-4" />
             Create Card

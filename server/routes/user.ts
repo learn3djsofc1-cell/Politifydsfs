@@ -83,4 +83,59 @@ router.put('/network-mode', requireAuth, async (req: AuthRequest, res: Response)
   }
 });
 
+router.put('/username', requireAuth, async (req: AuthRequest, res: Response) => {
+  try {
+    const { username } = req.body;
+
+    if (!username || typeof username !== 'string') {
+      res.status(400).json({ error: 'Username is required' });
+      return;
+    }
+
+    const trimmed = username.trim();
+
+    if (trimmed.length < 2 || trimmed.length > 20) {
+      res.status(400).json({ error: 'Username must be 2-20 characters' });
+      return;
+    }
+
+    if (!/^[a-zA-Z0-9_]+$/.test(trimmed)) {
+      res.status(400).json({ error: 'Username can only contain letters, numbers, and underscores' });
+      return;
+    }
+
+    const existing = await pool.query(
+      'SELECT id FROM users WHERE LOWER(username) = LOWER($1) AND id != $2',
+      [trimmed, req.user!.userId]
+    );
+
+    if (existing.rows.length > 0) {
+      res.status(409).json({ error: 'Username is already taken' });
+      return;
+    }
+
+    const result = await pool.query(
+      'UPDATE users SET username = $1 WHERE id = $2 RETURNING id, zkid, username, network_mode, created_at',
+      [trimmed, req.user!.userId]
+    );
+
+    if (result.rows.length === 0) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+
+    const user = result.rows[0];
+    res.json({
+      id: user.id,
+      zkid: user.zkid,
+      username: user.username,
+      networkMode: user.network_mode,
+      createdAt: user.created_at,
+    });
+  } catch (err) {
+    console.error('Update username error:', err);
+    res.status(500).json({ error: 'Failed to update username' });
+  }
+});
+
 export default router;
