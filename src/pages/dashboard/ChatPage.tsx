@@ -38,9 +38,16 @@ interface SearchResult {
   username: string;
 }
 
-interface PendingPayment {
+interface PaymentItem {
   amount: number;
   token: 'SOL' | 'USDC';
+  status?: 'pending' | 'sending' | 'confirmed' | 'failed';
+  error?: string;
+}
+
+interface PendingPayment {
+  items: PaymentItem[];
+  recipient: { userId: number; username: string } | null;
   originalMessage: string;
 }
 
@@ -226,15 +233,26 @@ export const ChatPage = () => {
 
       if (intentRes.ok) {
         const intent = await intentRes.json();
-        if (intent.type === 'payment' && intent.amount > 0) {
+        if (intent.type === 'payment' && Array.isArray(intent.items) && intent.items.length > 0) {
+          const paymentItems: PaymentItem[] = intent.items.map((item: { amount: number; token: 'SOL' | 'USDC' }) => ({
+            amount: item.amount,
+            token: item.token,
+            status: 'pending' as const,
+          }));
           setPendingPayment({
-            amount: intent.amount,
-            token: intent.token,
+            items: paymentItems,
+            recipient: intent.recipient || null,
             originalMessage: text,
           });
           setPaymentError('');
           setConfirmPassword('');
           setParsingIntent(false);
+          return;
+        }
+        if (intent.type === 'payment_error') {
+          setPaymentError(intent.error || 'Payment parsing error');
+          setParsingIntent(false);
+          setMessageText(text);
           return;
         }
       }
@@ -250,38 +268,110 @@ export const ChatPage = () => {
     if (!token || !activeConversation || !pendingPayment || !confirmPassword || sendingPayment) return;
     setSendingPayment(true);
     setPaymentError('');
-    try {
-      const res = await fetch('/api/transactions/send', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          receiverId: activeConversation.other_user_id,
-          amount: pendingPayment.amount,
-          token: pendingPayment.token,
-          password: confirmPassword,
-          conversationId: activeConversation.id,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setPaymentError(data.error || 'Transaction failed');
+
+    const receiverId = pendingPayment.recipient
+      ? pendingPayment.recipient.userId
+      : activeConversation.other_user_id;
+
+    let targetConversationId = activeConversation.id;
+
+    if (pendingPayment.recipient && pendingPayment.recipient.userId !== activeConversation.other_user_id) {
+      try {
+        const convRes = await fetch('/api/chat/conversations', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ otherUserId: pendingPayment.recipient.userId }),
+        });
+        if (convRes.ok) {
+          const convData = await convRes.json();
+          targetConversationId = convData.id;
+        } else {
+          setPaymentError(`Could not create conversation with @${pendingPayment.recipient.username}`);
+          setSendingPayment(false);
+          return;
+        }
+      } catch {
+        setPaymentError('Failed to set up conversation with recipient');
+        setSendingPayment(false);
         return;
       }
+    }
+
+    const updatedItems = [...pendingPayment.items];
+    let allSucceeded = true;
+    const results: string[] = [];
+
+    for (let i = 0; i < updatedItems.length; i++) {
+      if (updatedItems[i].status === 'confirmed') {
+        results.push(`${updatedItems[i].amount} ${updatedItems[i].token}`);
+        continue;
+      }
+      updatedItems[i] = { ...updatedItems[i], status: 'sending', error: undefined };
+      setPendingPayment({ ...pendingPayment, items: [...updatedItems] });
+
+      try {
+        const res = await fetch('/api/transactions/send', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            receiverId,
+            amount: updatedItems[i].amount,
+            token: updatedItems[i].token,
+            password: confirmPassword,
+            conversationId: targetConversationId,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          updatedItems[i] = { ...updatedItems[i], status: 'failed', error: data.error || 'Failed' };
+          allSucceeded = false;
+        } else {
+          updatedItems[i] = { ...updatedItems[i], status: 'confirmed' };
+          results.push(`${updatedItems[i].amount} ${updatedItems[i].token}`);
+        }
+      } catch {
+        updatedItems[i] = { ...updatedItems[i], status: 'failed', error: 'Network error' };
+        allSucceeded = false;
+      }
+      setPendingPayment({ ...pendingPayment, items: [...updatedItems] });
+    }
+
+    if (results.length > 0) {
+      setSuccessMessage(`${results.join(' + ')} sent successfully!`);
+      setTimeout(() => setSuccessMessage(''), 4000);
+    }
+    if (allSucceeded) {
       setPendingPayment(null);
       setConfirmPassword('');
       setPaymentError('');
-      setSuccessMessage(`${pendingPayment.amount} ${pendingPayment.token} sent successfully!`);
-      setTimeout(() => setSuccessMessage(''), 4000);
-      await fetchMessages(activeConversation.id);
-      await fetchConversations();
-    } catch {
-      setPaymentError('Failed to send payment');
-    } finally {
-      setSendingPayment(false);
+    } else {
+      const failedItems = updatedItems.filter(i => i.status === 'failed');
+      setPaymentError(failedItems.map(i => `${i.token}: ${i.error}`).join('; '));
     }
+    setSendingPayment(false);
+
+    if (targetConversationId !== activeConversation.id && pendingPayment.recipient) {
+      const newConv: Conversation = {
+        id: targetConversationId,
+        other_username: pendingPayment.recipient.username,
+        other_user_id: pendingPayment.recipient.userId,
+        last_message: null,
+        last_message_type: null,
+        last_message_at: null,
+        updated_at: new Date().toISOString(),
+      };
+      setActiveConversation(newConv);
+      setShowConversation(true);
+    }
+
+    await fetchMessages(targetConversationId);
+    await fetchConversations();
   };
 
   const cancelPayment = () => {
@@ -587,6 +677,37 @@ export const ChatPage = () => {
               })}
 
               <AnimatePresence>
+                {!pendingPayment && paymentError && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="flex justify-start"
+                  >
+                    <div className="max-w-[calc(100vw-4rem)] sm:max-w-[340px] w-full rounded-2xl bg-white border-2 border-red-200 shadow-md overflow-hidden">
+                      <div className="bg-red-50/50 px-4 py-3 border-b border-red-100">
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-lg bg-red-100 flex items-center justify-center">
+                            <AlertCircle className="w-4 h-4 text-red-500" />
+                          </div>
+                          <span className="text-xs font-semibold text-gray-900">Payment Error</span>
+                        </div>
+                      </div>
+                      <div className="p-4">
+                        <p className="text-sm text-red-700 mb-3">{paymentError}</p>
+                        <button
+                          onClick={() => setPaymentError('')}
+                          className="py-2 px-4 rounded-xl bg-gray-100 text-gray-600 text-sm font-medium hover:bg-gray-200 transition-colors"
+                        >
+                          Dismiss
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <AnimatePresence>
                 {pendingPayment && (
                   <motion.div
                     initial={{ opacity: 0, y: 16, scale: 0.95 }}
@@ -609,18 +730,33 @@ export const ChatPage = () => {
 
                       <div className="p-4">
                         <p className="text-sm text-gray-700 mb-3">
-                          You want to send <span className="font-bold text-gray-900">{pendingPayment.amount} {pendingPayment.token}</span> to <span className="font-bold text-[#9945FF]">@{activeConversation.other_username}</span>
+                          You want to send <span className="font-bold text-gray-900">{pendingPayment.items.map(i => `${i.amount} ${i.token}`).join(' + ')}</span> to <span className="font-bold text-[#9945FF]">@{pendingPayment.recipient ? pendingPayment.recipient.username : activeConversation.other_username}</span>
                         </p>
 
                         <div className="bg-gray-50 rounded-xl p-3 mb-3">
-                          <div className="flex items-center justify-between text-sm mb-1">
-                            <span className="text-gray-500">Amount</span>
-                            <span className="font-bold text-gray-900">{pendingPayment.amount} {pendingPayment.token}</span>
-                          </div>
+                          {pendingPayment.items.map((item, idx) => (
+                            <div key={idx} className="flex items-center justify-between text-sm mb-1">
+                              <span className="text-gray-500 flex items-center gap-1.5">
+                                {item.status === 'sending' && <Loader2 className="w-3 h-3 animate-spin text-[#9945FF]" />}
+                                {item.status === 'confirmed' && <Check className="w-3 h-3 text-green-600" />}
+                                {item.status === 'failed' && <X className="w-3 h-3 text-red-500" />}
+                                {pendingPayment.items.length > 1 ? `Item ${idx + 1}` : 'Amount'}
+                              </span>
+                              <span className={`font-bold ${item.status === 'confirmed' ? 'text-green-700' : item.status === 'failed' ? 'text-red-500 line-through' : 'text-gray-900'}`}>
+                                {item.amount} {item.token}
+                              </span>
+                            </div>
+                          ))}
                           <div className="flex items-center justify-between text-sm mb-1">
                             <span className="text-gray-500">To</span>
-                            <span className="font-medium text-gray-900">@{activeConversation.other_username}</span>
+                            <span className="font-medium text-gray-900">@{pendingPayment.recipient ? pendingPayment.recipient.username : activeConversation.other_username}</span>
                           </div>
+                          {pendingPayment.recipient && pendingPayment.recipient.userId !== activeConversation.other_user_id && (
+                            <div className="flex items-center gap-1.5 text-xs text-amber-600 mt-1 mb-1">
+                              <AlertCircle className="w-3 h-3 shrink-0" />
+                              <span>Sending to @{pendingPayment.recipient.username}, not current chat partner</span>
+                            </div>
+                          )}
                           <div className="flex items-center justify-between text-sm">
                             <span className="text-gray-500">Network</span>
                             <span className={`font-medium ${isTestnet ? 'text-amber-600' : 'text-green-600'}`}>

@@ -41,7 +41,7 @@ A React + TypeScript landing page and dashboard app for **SendlyFi**, a crypto-t
 - **3D**: Three.js, @react-three/fiber, @react-three/drei
 - **Animations**: Motion (Framer Motion)
 - **Icons**: Lucide React
-- **AI**: @google/genai (Gemini API)
+- **AI**: @google/genai (Gemini API) — production-grade NLP payment intent parser supporting multi-token commands, @username recipient extraction, "send all/balance" keywords, English and Indonesian phrasings
 - **Auth**: bcryptjs (password hashing), jsonwebtoken (JWT sessions)
 - **Solana**: @solana/web3.js (keypair generation, RPC queries), bs58 (base58 encoding)
 - **Database**: pg (PostgreSQL client)
@@ -88,7 +88,7 @@ server/
   routes/
     auth.ts                      # POST /api/auth/signup, POST /api/auth/login, GET /api/auth/me
     wallet.ts                    # POST /api/wallet/create (keypair gen + encrypt + store), GET /api/wallet (public key + balances)
-    chat.ts                      # GET/POST /api/chat/conversations, GET/POST /api/chat/conversations/:id/messages
+    chat.ts                      # GET/POST /api/chat/conversations, GET/POST /api/chat/conversations/:id/messages, POST /api/chat/parse-intent (NLP payment parser)
     transactions.ts              # POST /api/transactions/send (on-chain SOL/USDC transfer), GET /api/transactions/:id, POST /api/transactions/airdrop
     user.ts                      # GET /api/users/search, GET/PUT /api/users/network-mode
     prices.ts                    # GET /api/prices (CoinGecko SOL/USDC prices with 30s cache)

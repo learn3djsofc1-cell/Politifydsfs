@@ -16,6 +16,7 @@ const ai = new GoogleGenAI({
 router.post('/parse-intent', requireAuth, async (req: AuthRequest, res: Response) => {
   try {
     const { message } = req.body;
+    const userId = req.user!.userId;
 
     if (!message || typeof message !== 'string') {
       res.status(400).json({ error: 'Message is required' });
@@ -27,18 +28,46 @@ router.post('/parse-intent', requireAuth, async (req: AuthRequest, res: Response
       return;
     }
 
-    const prompt = `You are a payment intent parser for a crypto chat banking app. Analyze the user's message and determine if they want to send a payment.
+    const prompt = `You are a production-grade payment intent parser for a crypto chat banking app (SendlyFi). Analyze the user's message and determine if they want to send/transfer/pay cryptocurrency.
+
+SUPPORTED TOKENS: SOL (also "solana", "sol"), USDC (also "usdc", "usd coin")
+
+PAYMENT KEYWORDS (English): send, transfer, pay, give, tip, forward, deposit
+PAYMENT KEYWORDS (Indonesian): kirim, kirimkan, transfer, bayar, bayarkan, kasih, beri, berikan, tolong kirimkan, mau kirim, bisa kirim
 
 RULES:
-- If the message is a payment intent (send, transfer, pay, kirim, bayar, etc), extract the amount and token (SOL or USDC).
-- If no token is specified, default to USDC.
-- If no amount is specified, return type "text".
-- Only return valid JSON, nothing else.
+1. If the message contains a payment intent, extract ALL payment items. A single message can contain MULTIPLE tokens (e.g., "send 100 USDC and 1 SOL" = two items).
+2. For each payment item, extract: amount (number) and token (SOL or USDC).
+3. If a user says "send all", "send my balance", "send everything", "kirim semua", "kirim semua saldo" for a token, set send_all=true for that item and amount=0.
+4. If no specific token is mentioned with "send all/everything", assume BOTH SOL and USDC with send_all=true.
+5. If no token is specified for a specific amount, default to USDC.
+6. Extract @username mentions as the recipient (e.g., "@test12345" -> recipient="test12345"). Only extract the FIRST @mention.
+7. Ignore conversational noise, politeness phrases, questions marks. Focus on intent.
+8. If there is NO payment intent at all (casual conversation, greetings, questions about balance, etc.), return type "text".
+9. If a payment keyword exists but no amount AND no "send all" intent, return type "text".
 
-RESPOND WITH EXACTLY ONE OF:
-{"type":"payment","amount":<number>,"token":"SOL"} 
-{"type":"payment","amount":<number>,"token":"USDC"}
+RESPOND WITH ONLY VALID JSON in one of these formats:
+
+For payment intent (single or multiple items):
+{"type":"payment","items":[{"amount":<number>,"token":"SOL|USDC","send_all":false}],"recipient":null}
+{"type":"payment","items":[{"amount":100,"token":"USDC","send_all":false},{"amount":1,"token":"SOL","send_all":false}],"recipient":"username"}
+{"type":"payment","items":[{"amount":0,"token":"SOL","send_all":true}],"recipient":null}
+
+For non-payment:
 {"type":"text"}
+
+EXAMPLES:
+"send 100 usdc" -> {"type":"payment","items":[{"amount":100,"token":"USDC","send_all":false}],"recipient":null}
+"send 100 usdc and 1 sol to @alice" -> {"type":"payment","items":[{"amount":100,"token":"USDC","send_all":false},{"amount":1,"token":"SOL","send_all":false}],"recipient":"alice"}
+"kirim 50 usdc ke @test12345" -> {"type":"payment","items":[{"amount":50,"token":"USDC","send_all":false}],"recipient":"test12345"}
+"send all my sol" -> {"type":"payment","items":[{"amount":0,"token":"SOL","send_all":true}],"recipient":null}
+"send everything" -> {"type":"payment","items":[{"amount":0,"token":"SOL","send_all":true},{"amount":0,"token":"USDC","send_all":true}],"recipient":null}
+"tolong kirimkan 20 usdc" -> {"type":"payment","items":[{"amount":20,"token":"USDC","send_all":false}],"recipient":null}
+"how are you?" -> {"type":"text"}
+"what's my balance?" -> {"type":"text"}
+"bisa kirim 10 usdc dan 0.5 sol?" -> {"type":"payment","items":[{"amount":10,"token":"USDC","send_all":false},{"amount":0.5,"token":"SOL","send_all":false}],"recipient":null}
+"i need you sending my balance 100 usdc and 1 solana to @test12345" -> {"type":"payment","items":[{"amount":100,"token":"USDC","send_all":false},{"amount":1,"token":"SOL","send_all":false}],"recipient":"test12345"}
+"kasih 10 sol ke dia" -> {"type":"payment","items":[{"amount":10,"token":"SOL","send_all":false}],"recipient":null}
 
 User message: "${message.replace(/"/g, '\\"')}"`;
 
@@ -46,19 +75,140 @@ User message: "${message.replace(/"/g, '\\"')}"`;
       model: 'gemini-2.5-flash',
       contents: prompt,
       config: {
-        maxOutputTokens: 100,
+        maxOutputTokens: 300,
         temperature: 0,
       },
     });
 
     const text = (response.text || '').trim();
-    const jsonMatch = text.match(/\{[^}]+\}/);
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
     
     if (jsonMatch) {
       const parsed = JSON.parse(jsonMatch[0]);
-      if (parsed.type === 'payment' && typeof parsed.amount === 'number' && parsed.amount > 0) {
-        const token = parsed.token === 'SOL' ? 'SOL' : 'USDC';
-        res.json({ type: 'payment', amount: parsed.amount, token });
+      
+      if (parsed.type === 'payment' && Array.isArray(parsed.items) && parsed.items.length > 0) {
+        const validItems: Array<{ amount: number; token: 'SOL' | 'USDC'; send_all: boolean }> = [];
+        
+        for (const item of parsed.items) {
+          const tokenVal = (item.token || '').toUpperCase() === 'SOL' ? 'SOL' as const : 'USDC' as const;
+          const sendAll = item.send_all === true;
+          const amount = typeof item.amount === 'number' ? item.amount : 0;
+          
+          if (sendAll || amount > 0) {
+            validItems.push({ amount, token: tokenVal, send_all: sendAll });
+          }
+        }
+
+        if (validItems.length === 0) {
+          res.json({ type: 'text' });
+          return;
+        }
+
+        for (const paymentItem of validItems) {
+          if (paymentItem.send_all) {
+            try {
+              const userResult = await pool.query(
+                'SELECT network_mode FROM users WHERE id = $1',
+                [userId]
+              );
+              const networkMode = userResult.rows[0]?.network_mode || 'devnet';
+
+              if (networkMode === 'devnet') {
+                const balResult = await pool.query(
+                  'SELECT sol_balance, usdc_balance FROM testnet_balances WHERE user_id = $1',
+                  [userId]
+                );
+                if (balResult.rows.length > 0) {
+                  const row = balResult.rows[0];
+                  if (paymentItem.token === 'SOL') {
+                    const SOL_FEE_BUFFER = 0.01;
+                    paymentItem.amount = Math.max(0, parseFloat(row.sol_balance) - SOL_FEE_BUFFER);
+                  } else {
+                    paymentItem.amount = parseFloat(row.usdc_balance);
+                  }
+                }
+              } else {
+                const walletResult = await pool.query(
+                  'SELECT public_key FROM wallets WHERE user_id = $1',
+                  [userId]
+                );
+                if (walletResult.rows.length > 0) {
+                  const { Connection, PublicKey, LAMPORTS_PER_SOL } = await import('@solana/web3.js');
+                  const HELIUS_API_KEY = process.env.HELIUS_API_KEY || '';
+                  const rpcUrl = HELIUS_API_KEY
+                    ? `https://mainnet.helius-rpc.com/?api-key=${HELIUS_API_KEY}`
+                    : 'https://api.mainnet-beta.solana.com';
+                  const connection = new Connection(rpcUrl, 'confirmed');
+                  const pubkey = new PublicKey(walletResult.rows[0].public_key);
+
+                  if (paymentItem.token === 'SOL') {
+                    const lamports = await connection.getBalance(pubkey);
+                    const SOL_FEE_BUFFER = 0.01;
+                    paymentItem.amount = Math.max(0, (lamports / LAMPORTS_PER_SOL) - SOL_FEE_BUFFER);
+                  } else {
+                    const { getAssociatedTokenAddress } = await import('@solana/spl-token');
+                    const USDC_MINT = new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v');
+                    try {
+                      const tokenAccounts = await connection.getParsedTokenAccountsByOwner(pubkey, {
+                        mint: USDC_MINT,
+                      });
+                      let usdcBalance = 0;
+                      for (const acct of tokenAccounts.value) {
+                        usdcBalance += acct.account.data.parsed.info.tokenAmount.uiAmount || 0;
+                      }
+                      paymentItem.amount = usdcBalance;
+                    } catch {
+                      paymentItem.amount = 0;
+                    }
+                  }
+                }
+              }
+
+              if (paymentItem.amount <= 0) {
+                paymentItem.amount = 0;
+              }
+            } catch (balErr) {
+              console.error('Balance fetch error for send_all:', balErr);
+              paymentItem.amount = 0;
+            }
+          }
+        }
+
+        const finalItems = validItems.filter(i => i.amount > 0);
+        if (finalItems.length === 0) {
+          res.json({ type: 'payment_error', error: 'Your balance is zero for the requested token(s)' });
+          return;
+        }
+
+        let recipient: { userId: number; username: string } | null = null;
+        if (parsed.recipient && typeof parsed.recipient === 'string') {
+          const username = parsed.recipient.replace(/^@/, '');
+          try {
+            const userLookup = await pool.query(
+              'SELECT id, username FROM users WHERE LOWER(username) = LOWER($1)',
+              [username]
+            );
+            if (userLookup.rows.length > 0) {
+              recipient = {
+                userId: userLookup.rows[0].id,
+                username: userLookup.rows[0].username,
+              };
+            } else {
+              res.json({ type: 'payment_error', error: `User @${username} not found` });
+              return;
+            }
+          } catch (lookupErr) {
+            console.error('Username lookup error:', lookupErr);
+            res.json({ type: 'payment_error', error: `Failed to look up user @${username}` });
+            return;
+          }
+        }
+
+        res.json({
+          type: 'payment',
+          items: finalItems.map(i => ({ amount: i.amount, token: i.token })),
+          recipient,
+        });
         return;
       }
     }
