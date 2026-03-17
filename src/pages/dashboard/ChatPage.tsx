@@ -333,7 +333,7 @@ export const ChatPage = () => {
       variants={container}
       initial="hidden"
       animate="show"
-      className="h-[calc(100vh-3.5rem)] lg:h-screen flex"
+      className="h-[calc(100vh-3.5rem)] lg:h-screen flex overflow-hidden"
     >
       <motion.div
         variants={item}
@@ -458,7 +458,7 @@ export const ChatPage = () => {
 
       <motion.div
         variants={item}
-        className={`flex-1 flex flex-col bg-[#F4F5F7] ${
+        className={`flex-1 min-w-0 flex flex-col bg-[#F4F5F7] ${
           !showConversation ? 'hidden lg:flex' : 'flex'
         }`}
       >
@@ -496,7 +496,7 @@ export const ChatPage = () => {
               </div>
             </div>
 
-            <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 space-y-3">
+            <div ref={messagesContainerRef} className="flex-1 overflow-y-auto overflow-x-hidden p-4 space-y-3">
               {messages.length === 0 && !pendingPayment && (
                 <div className="text-center py-8">
                   <div className="w-12 h-12 rounded-2xl bg-[#9945FF]/10 flex items-center justify-center mx-auto mb-3">
@@ -516,7 +516,7 @@ export const ChatPage = () => {
                 if (isPayment) {
                   return (
                     <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                      <div className={`max-w-[320px] rounded-2xl p-4 ${
+                      <div className={`max-w-[calc(100vw-6rem)] sm:max-w-[320px] rounded-2xl p-4 ${
                         isMe ? 'bg-gradient-to-br from-[#9945FF] to-[#7B2FE0] text-white' : 'bg-white border border-gray-200'
                       }`}>
                         <div className="flex items-center gap-2 mb-2">
@@ -572,7 +572,7 @@ export const ChatPage = () => {
 
                 return (
                   <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[280px] rounded-2xl px-4 py-2.5 ${
+                    <div className={`max-w-[calc(100vw-6rem)] sm:max-w-[280px] rounded-2xl px-4 py-2.5 ${
                       isMe
                         ? 'bg-[#9945FF] text-white'
                         : 'bg-white border border-gray-200 text-gray-900'
@@ -594,7 +594,7 @@ export const ChatPage = () => {
                     exit={{ opacity: 0, y: -8, scale: 0.95 }}
                     className="flex justify-start"
                   >
-                    <div className="max-w-[340px] rounded-2xl bg-white border-2 border-[#9945FF]/20 shadow-lg overflow-hidden">
+                    <div className="max-w-[calc(100vw-4rem)] sm:max-w-[340px] w-full rounded-2xl bg-white border-2 border-[#9945FF]/20 shadow-lg overflow-hidden">
                       <div className="bg-gradient-to-r from-[#9945FF]/5 to-[#14F195]/5 px-4 py-3 border-b border-gray-100">
                         <div className="flex items-center gap-2">
                           <div className="w-7 h-7 rounded-lg bg-[#9945FF]/10 flex items-center justify-center">
@@ -646,25 +646,27 @@ export const ChatPage = () => {
                           className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-[#9945FF]/40 focus:ring-2 focus:ring-[#9945FF]/10 transition-all mb-3"
                         />
 
-                        <div className="flex gap-2">
-                          <button
-                            onClick={cancelPayment}
-                            disabled={sendingPayment}
-                            className="py-2.5 px-3 rounded-xl bg-gray-100 text-gray-600 text-sm font-medium hover:bg-gray-200 transition-colors disabled:opacity-50"
-                          >
-                            Cancel
-                          </button>
-                          <button
-                            onClick={sendAsText}
-                            disabled={sendingPayment || sendingMessage}
-                            className="py-2.5 px-3 rounded-xl bg-gray-50 border border-gray-200 text-gray-500 text-xs font-medium hover:bg-gray-100 transition-colors disabled:opacity-50"
-                          >
-                            Send as text
-                          </button>
+                        <div className="flex flex-col-reverse sm:flex-row gap-2">
+                          <div className="flex gap-2 sm:contents">
+                            <button
+                              onClick={cancelPayment}
+                              disabled={sendingPayment}
+                              className="flex-1 sm:flex-none py-2.5 px-3 rounded-xl bg-gray-100 text-gray-600 text-sm font-medium hover:bg-gray-200 transition-colors disabled:opacity-50"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              onClick={sendAsText}
+                              disabled={sendingPayment || sendingMessage}
+                              className="flex-1 sm:flex-none py-2.5 px-3 rounded-xl bg-gray-50 border border-gray-200 text-gray-500 text-xs font-medium hover:bg-gray-100 transition-colors disabled:opacity-50"
+                            >
+                              Send as text
+                            </button>
+                          </div>
                           <button
                             onClick={confirmPayment}
                             disabled={sendingPayment || !confirmPassword}
-                            className="flex-1 py-2.5 rounded-xl bg-[#9945FF] text-white text-sm font-medium hover:bg-[#8030E0] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            className="w-full sm:w-auto sm:flex-1 py-2.5 px-4 rounded-xl bg-[#9945FF] text-white text-sm font-medium hover:bg-[#8030E0] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                           >
                             {sendingPayment ? (
                               <>
