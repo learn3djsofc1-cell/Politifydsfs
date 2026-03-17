@@ -1,0 +1,5 @@
+{
+  "name": "TARS Hero Section",
+  "description": "A production-grade implementation of the TARS hero section with a responsive CSS grid background and a custom SVG 3D object.",
+  "requestFramePermissions": []
+}

@@ -1,0 +1,138 @@
+
+Sendy
+
+Online
+
+Hey! Can you send me 100 USDC?
+
+Payment Sent
+Sent 100 USDC
+
+Confirmed in 2.3s
+
+Received!
+Converting to USD now...
+
+Virtual Card Ready
+$99.50 available to spend
+
+**** 4242
+Perfect! Just paid for my subscription
+
+Message...
+ZK Verified
+
+Private & Secure
+
+Live
+Sendy
+Sendy
+Launch App
+Crypto Banking in Chat
+Chat Is the New Bank
+Crypto to Fiat Included.
+
+A Telegram-like messaging app that functions as a private banking layer. Send crypto, convert to fiat, spend with virtual cards — all inside a single chat interface.
+
+Launch App
+Docs
+X
+Sendy
+Chat App as Banking
+Traditional banks are slow, permissioned, and surveillance-heavy. Crypto wallets are powerful but disconnected from everyday finance.
+
+Sendy unifies messaging, crypto, and fiat banking into one experience. Send crypto like sending a message. Convert crypto to fiat inside chat. Spend via virtual debit cards. Receive funds without revealing balances. No phone numbers, no bank accounts. Every conversation becomes a private financial channel.
+
+Sendy
+
+Online
+
+Hey! Can you send me 100 USDC?
+
+Payment Sent
+Sent 100 USDC
+
+Confirmed in 2.3s
+
+Received!
+Converting to USD now...
+
+Virtual Card Ready
+$99.50 available to spend
+
+**** 4242
+Perfect! Just paid for my subscription
+
+Message...
+ZK Verified
+
+Private & Secure
+
+Live
+Wallet-Native Messaging
+Your wallet is your identity. Non-custodial by default.
+
+Private Payments
+Send crypto directly in conversation with full privacy.
+
+Crypto to Fiat
+Convert crypto to fiat instantly inside chat.
+
+Virtual Cards
+Spend globally without exposing your wallet.
+
+AI Banking Assistant
+A private AI agent inside chat that explains transactions, manages cards, detects risks, and executes commands via natural language.
+
+AI never accesses private keys
+Natural language commands
+Zero-Knowledge Infrastructure
+All financial actions are verified using zero-knowledge proofs. Privacy by default, scalable architecture, low-cost verification.
+
+Trust is replaced by math
+Future-proof cryptography
+Use Cases
+Everyday Users
+• Crypto payments
+• Online shopping
+• Subscriptions
+• Cross-border spending
+Web3 Teams & DAOs
+• Treasury operations
+• Contributor payouts
+• Expense management
+• Fiat off-ramping
+Privacy-Critical Users
+• Founders
+• Traders
+• Journalists
+• Activists
+Roadmap
+Phase 1
+Encrypted chat + wallet identity
+
+Phase 2
+Private crypto payments and mixer
+
+Phase 3
+Crypto to fiat conversion
+
+Phase 4
+Virtual debit cards
+
+Phase 5
+AI banking automation and global expansion
+
+The Future of Money
+Crypto should not be trapped on-chain. Fiat should not require permission. Message. Convert. Spend. Privately.
+
+Get Started Now
+Sendy
+Sendy
+Chat as banking. Crypto to fiat, messaging to payments — all in one.
+
+Resources
+Documentation
+Connect
+
+© 2025 Sendy. All rights reserved.
