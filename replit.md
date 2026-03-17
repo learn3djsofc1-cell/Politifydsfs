@@ -16,7 +16,7 @@ A React + TypeScript landing page and dashboard app for **SendlyFi**, a crypto-t
 - `/dashboard` — Protected dashboard (redirects to /login if unauthenticated; wallet gate redirects to /dashboard/create-wallet if no wallet) with nested routes:
   - `/dashboard` (index) — Overview: wallet balance (live SOL/USDC from Helius RPC), USD conversion (CoinGecko prices), public key display, network badge, quick actions, income/spending cards, empty recent activity, auto-refresh (30s + focus)
   - `/dashboard/wallets` — Wallets page: full wallet address display, SOL/USDC balances with USD conversion, copy address, Solana Explorer link, network badge (Devnet/Mainnet), skeleton loading, error/retry, auto-refresh
-  - `/dashboard/chat` — Chat banking interface with empty conversations list, message input, payment composer
+  - `/dashboard/chat` — Full chat system: user search, conversation list, real-time messaging (4s polling), send SOL/USDC payments with on-chain transactions, payment message bubbles with Explorer links, devnet airdrop
   - `/dashboard/cards` — Virtual card management with empty state, Create Card CTA, feature cards
   - `/dashboard/payments` — Scheduled payments with empty state, Set Up Payment CTA, feature cards
   - `/dashboard/settings` — Account settings with profile, security, preferences sections
@@ -76,7 +76,7 @@ src/
       CreateWalletPage.tsx       # Solana wallet creation with private key reveal + Phantom import instructions
       WalletsPage.tsx            # Wallet detail page: address, SOL/USDC balances, USD conversion, copy, Explorer link
       OverviewPage.tsx           # Live wallet balance (SOL/USDC via Helius RPC), USD prices, quick actions, income/spending, activity
-      ChatPage.tsx               # Chat interface with conversations list + message area
+      ChatPage.tsx               # Full chat: user search, conversations, messaging, send money (SOL/USDC), payment bubbles, airdrop
       CardsPage.tsx              # Virtual cards management with empty state
       PaymentsPage.tsx           # Scheduled payments with empty state
       SettingsPage.tsx           # Profile, security, preferences settings
@@ -88,6 +88,10 @@ server/
   routes/
     auth.ts                      # POST /api/auth/signup, POST /api/auth/login, GET /api/auth/me
     wallet.ts                    # POST /api/wallet/create (keypair gen + encrypt + store), GET /api/wallet (public key + balances)
+    chat.ts                      # GET/POST /api/chat/conversations, GET/POST /api/chat/conversations/:id/messages
+    transactions.ts              # POST /api/transactions/send (on-chain SOL/USDC transfer), GET /api/transactions/:id, POST /api/transactions/airdrop
+    user.ts                      # GET /api/users/search, GET/PUT /api/users/network-mode
+    prices.ts                    # GET /api/prices (CoinGecko SOL/USDC prices with 30s cache)
 public/
   sendlyfi-logo.png             # SendlyFi logo asset
 index.html                      # Title: "SendlyFi — Chat Is the New Bank"
@@ -139,6 +143,13 @@ Configured as a **static** deployment:
 - `GET /api/users/network-mode` — get user's network mode
 - `PUT /api/users/network-mode` — toggle between devnet and mainnet-beta
 - `GET /api/prices` — real-time SOL and USDC prices from CoinGecko (30s cache)
+- `GET /api/chat/conversations` — list user's conversations with last message preview
+- `POST /api/chat/conversations` — create or get existing conversation with another user
+- `GET /api/chat/conversations/:id/messages` — get messages with pagination (before cursor)
+- `POST /api/chat/conversations/:id/messages` — send a text message
+- `POST /api/transactions/send` — send SOL/USDC on-chain transfer (requires password to decrypt private key)
+- `GET /api/transactions/:id` — get transaction details
+- `POST /api/transactions/airdrop` — request 1 SOL devnet airdrop
 
 ## Notes
 - Vite file watcher ignores `.local/`, `.cache/`, `.git/`, `.agents/`, `tmp/` to prevent reload loops in Replit
