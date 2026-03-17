@@ -19,7 +19,7 @@ export const SignUpPage = () => {
 
   const usernameChecks = {
     length: username.length >= 3 && username.length <= 20,
-    format: /^[a-z0-9_]*$/.test(username.toLowerCase()) && username.length > 0,
+    format: /^[a-z0-9]*$/.test(username.toLowerCase()) && username.length > 0,
   };
 
   const passwordChecks = {
@@ -184,7 +184,7 @@ export const SignUpPage = () => {
             <div className="space-y-2">
               {[
                 { key: 'u_length', label: 'Username: 3-20 characters', check: usernameChecks.length },
-                { key: 'u_format', label: 'Username: letters, numbers, underscores only', check: usernameChecks.format },
+                { key: 'u_format', label: 'Username: letters and numbers only', check: usernameChecks.format },
                 { key: 'length', label: 'At least 8 characters', check: passwordChecks.length },
                 { key: 'uppercase', label: 'One uppercase letter', check: passwordChecks.uppercase },
                 { key: 'number', label: 'One number', check: passwordChecks.number },

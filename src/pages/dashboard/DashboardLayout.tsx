@@ -6,6 +6,7 @@ import {
   Settings, Menu, X
 } from 'lucide-react';
 import { Logo } from '../../components/Logo';
+import { useAuth } from '../../contexts/AuthContext';
 
 const navItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Overview', end: true },
@@ -18,6 +19,7 @@ const navItems = [
 export const DashboardLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
+  const { user } = useAuth();
 
   return (
     <div className="min-h-screen bg-[#F4F5F7] text-gray-900 flex">
@@ -124,8 +126,9 @@ export const DashboardLayout = () => {
             </span>
           </div>
           <div className="flex items-center gap-3">
+            <span className="text-sm font-medium text-gray-600">@{user?.username || 'user'}</span>
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#9945FF]/15 to-[#14F195]/15 flex items-center justify-center">
-              <span className="text-xs font-bold text-gray-500">SF</span>
+              <span className="text-xs font-bold text-gray-500">{user?.username ? user.username.slice(0, 2).toUpperCase() : 'SF'}</span>
             </div>
           </div>
         </div>

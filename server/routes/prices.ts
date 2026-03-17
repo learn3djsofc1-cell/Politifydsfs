@@ -4,7 +4,10 @@ import { requireAuth, AuthRequest } from '../middleware.js';
 const router = Router();
 
 const COINGECKO_API_KEY = process.env.COINGECKO_API_KEY || '';
-const COINGECKO_BASE_URL = 'https://api.coingecko.com/api/v3';
+const IS_DEMO_KEY = COINGECKO_API_KEY.startsWith('CG-');
+const COINGECKO_BASE_URL = COINGECKO_API_KEY && !IS_DEMO_KEY
+  ? 'https://pro-api.coingecko.com/api/v3'
+  : 'https://api.coingecko.com/api/v3';
 
 interface PriceCache {
   sol: number;
@@ -26,7 +29,11 @@ async function fetchPricesFromCoinGecko(): Promise<{ sol: number; usdc: number }
   };
 
   if (COINGECKO_API_KEY) {
-    headers['x-cg-demo-api-key'] = COINGECKO_API_KEY;
+    if (IS_DEMO_KEY) {
+      headers['x-cg-demo-api-key'] = COINGECKO_API_KEY;
+    } else {
+      headers['x-cg-pro-api-key'] = COINGECKO_API_KEY;
+    }
   }
 
   const response = await fetch(url, { headers });

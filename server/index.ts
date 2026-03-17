@@ -19,6 +19,7 @@ app.get('/api/health', (_req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/wallet', walletRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/user', userRoutes);
 app.use('/api/prices', pricesRoutes);
 
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {

@@ -26,8 +26,8 @@ router.post('/signup', async (req, res: Response) => {
       return;
     }
 
-    if (!/^[a-z0-9_]+$/.test(trimmedUsername)) {
-      res.status(400).json({ error: 'Username can only contain letters, numbers, and underscores' });
+    if (!/^[a-z0-9]+$/.test(trimmedUsername)) {
+      res.status(400).json({ error: 'Username can only contain letters and numbers' });
       return;
     }
 
