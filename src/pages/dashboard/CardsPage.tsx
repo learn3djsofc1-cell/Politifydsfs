@@ -24,7 +24,7 @@ export const CardsPage = () => {
       variants={container}
       initial="hidden"
       animate="show"
-      className="p-4 lg:p-8 max-w-[1200px] mx-auto"
+      className="p-4 lg:p-8 max-w-[1200px] w-full mx-auto overflow-x-hidden"
     >
       <motion.div variants={item} className="flex items-center justify-between mb-8">
         <div>

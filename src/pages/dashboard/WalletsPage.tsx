@@ -109,7 +109,7 @@ export const WalletsPage = () => {
 
   if (loading) {
     return (
-      <div className="p-4 lg:p-8 max-w-[1200px] mx-auto">
+      <div className="p-4 lg:p-8 max-w-[1200px] w-full mx-auto overflow-x-hidden">
         <div className="mb-8">
           <div className="h-8 w-40 bg-gray-200 rounded-lg animate-pulse mb-2" />
           <div className="h-4 w-64 bg-gray-100 rounded animate-pulse" />
@@ -128,7 +128,7 @@ export const WalletsPage = () => {
       variants={container}
       initial="hidden"
       animate="show"
-      className="p-4 lg:p-8 max-w-[1200px] mx-auto"
+      className="p-4 lg:p-8 max-w-[1200px] w-full mx-auto overflow-x-hidden"
     >
       <motion.div variants={item} className="mb-8">
         <div className="flex items-center justify-between">

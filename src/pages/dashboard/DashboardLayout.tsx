@@ -108,7 +108,7 @@ export const DashboardLayout = () => {
   }, [logout, navigate]);
 
   return (
-    <div className="min-h-screen bg-[#F4F5F7] text-gray-900 flex">
+    <div className="min-h-screen w-full max-w-[100vw] bg-[#F4F5F7] text-gray-900 flex overflow-x-hidden">
       <aside className="hidden lg:flex flex-col w-64 border-r border-gray-200 bg-white fixed h-full z-30">
         <Link to="/" className="px-6 py-6 flex items-center gap-3 border-b border-gray-200 hover:bg-gray-50 transition-colors">
           <Logo className="w-7 h-7" />
@@ -146,13 +146,13 @@ export const DashboardLayout = () => {
         </div>
       </aside>
 
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-xl border-b border-gray-200">
-        <div className="flex items-center justify-between px-4 h-14">
-          <Link to="/" className="flex items-center gap-3">
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-xl border-b border-gray-200 overflow-hidden">
+        <div className="flex items-center justify-between px-3 h-14 gap-2">
+          <Link to="/" className="flex items-center gap-2 shrink-0">
             <Logo className="w-6 h-6" />
             <span className="font-bold text-base tracking-tight">SendlyFi</span>
           </Link>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 shrink-0">
             <NetworkSelector
               isTestnet={isTestnet}
               networkSwitching={networkSwitching}
@@ -162,7 +162,7 @@ export const DashboardLayout = () => {
             />
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-2 text-gray-500 hover:text-gray-900"
+              className="p-2 text-gray-500 hover:text-gray-900 shrink-0"
             >
               {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
@@ -230,7 +230,7 @@ export const DashboardLayout = () => {
         )}
       </AnimatePresence>
 
-      <div className="flex-1 lg:ml-64 pb-20 lg:pb-0">
+      <div className="flex-1 min-w-0 lg:ml-64 pb-20 lg:pb-0 overflow-x-hidden">
         <div className="hidden lg:flex items-center justify-between px-8 h-16 border-b border-gray-200 bg-white/80 backdrop-blur-xl sticky top-0 z-20">
           <div className="text-sm text-gray-500">
             <span className="text-gray-500">SendlyFi</span>
@@ -252,7 +252,7 @@ export const DashboardLayout = () => {
             </div>
           </div>
         </div>
-        <div className="pt-14 lg:pt-0">
+        <div className="pt-14 lg:pt-0 overflow-x-hidden">
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}

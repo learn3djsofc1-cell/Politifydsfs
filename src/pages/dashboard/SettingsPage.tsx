@@ -45,7 +45,7 @@ export const SettingsPage = () => {
       variants={container}
       initial="hidden"
       animate="show"
-      className="p-4 lg:p-8 max-w-[800px] mx-auto"
+      className="p-4 lg:p-8 max-w-[800px] w-full mx-auto overflow-x-hidden"
     >
       <motion.div variants={item} className="mb-8">
         <h1 className="text-2xl lg:text-3xl font-bold tracking-tight text-gray-900">Settings</h1>
