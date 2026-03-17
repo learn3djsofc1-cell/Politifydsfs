@@ -130,6 +130,27 @@ export async function initDatabase() {
       )
     `);
 
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS cards (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        card_type VARCHAR(20) NOT NULL CHECK (card_type IN ('visa', 'mastercard')),
+        card_number_last4 VARCHAR(4) NOT NULL,
+        cardholder_name VARCHAR(50) NOT NULL,
+        expiry_month INTEGER NOT NULL CHECK (expiry_month BETWEEN 1 AND 12),
+        expiry_year INTEGER NOT NULL,
+        status VARCHAR(20) NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'frozen', 'pending_deletion')),
+        previous_status VARCHAR(20) CHECK (previous_status IN ('active', 'frozen')),
+        deletion_requested_at TIMESTAMP WITH TIME ZONE,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        CONSTRAINT idx_cards_user_type UNIQUE (user_id, card_type)
+      )
+    `);
+
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_cards_user_id ON cards(user_id)
+    `);
+
     const healthCheck = await client.query('SELECT NOW() as time');
     console.log(`Database connected at ${healthCheck.rows[0].time}`);
     console.log('Database tables initialized successfully');
