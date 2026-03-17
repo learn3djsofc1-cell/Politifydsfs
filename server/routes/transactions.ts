@@ -376,6 +376,113 @@ async function handleMainnetSend(
   }
 }
 
+router.get('/summary', requireAuth, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user!.userId;
+
+    const userResult = await pool.query(
+      'SELECT network_mode FROM users WHERE id = $1',
+      [userId]
+    );
+    if (userResult.rows.length === 0) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+    const networkMode = userResult.rows[0].network_mode;
+
+    const [sentResult, receivedResult] = await Promise.all([
+      pool.query(
+        `SELECT
+           COALESCE(SUM(CASE WHEN token = 'SOL' THEN amount ELSE 0 END), 0) AS sol_sent,
+           COALESCE(SUM(CASE WHEN token = 'USDC' THEN amount ELSE 0 END), 0) AS usdc_sent
+         FROM transactions
+         WHERE sender_id = $1 AND network = $2 AND status = 'confirmed'
+           AND created_at >= date_trunc('month', now() AT TIME ZONE 'UTC')`,
+        [userId, networkMode]
+      ),
+      pool.query(
+        `SELECT
+           COALESCE(SUM(CASE WHEN token = 'SOL' THEN amount ELSE 0 END), 0) AS sol_received,
+           COALESCE(SUM(CASE WHEN token = 'USDC' THEN amount ELSE 0 END), 0) AS usdc_received
+         FROM transactions
+         WHERE receiver_id = $1 AND network = $2 AND status = 'confirmed'
+           AND created_at >= date_trunc('month', now() AT TIME ZONE 'UTC')`,
+        [userId, networkMode]
+      ),
+    ]);
+
+    res.json({
+      sent: {
+        sol: parseFloat(sentResult.rows[0].sol_sent),
+        usdc: parseFloat(sentResult.rows[0].usdc_sent),
+      },
+      received: {
+        sol: parseFloat(receivedResult.rows[0].sol_received),
+        usdc: parseFloat(receivedResult.rows[0].usdc_received),
+      },
+    });
+  } catch (err) {
+    console.error('Transaction summary error:', err);
+    res.status(500).json({ error: 'Failed to fetch transaction summary' });
+  }
+});
+
+router.get('/recent', requireAuth, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user!.userId;
+
+    const userResult = await pool.query(
+      'SELECT network_mode FROM users WHERE id = $1',
+      [userId]
+    );
+    if (userResult.rows.length === 0) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+    const networkMode = userResult.rows[0].network_mode;
+
+    const result = await pool.query(
+      `SELECT
+         t.id,
+         t.sender_id,
+         t.receiver_id,
+         t.amount,
+         t.token,
+         t.tx_signature,
+         t.network,
+         t.status,
+         t.created_at,
+         su.username AS sender_username,
+         ru.username AS receiver_username
+       FROM transactions t
+       JOIN users su ON t.sender_id = su.id
+       JOIN users ru ON t.receiver_id = ru.id
+       WHERE (t.sender_id = $1 OR t.receiver_id = $1)
+         AND t.network = $2
+       ORDER BY t.created_at DESC
+       LIMIT 20`,
+      [userId, networkMode]
+    );
+
+    const transactions = result.rows.map(row => ({
+      id: row.id,
+      direction: row.sender_id === userId ? 'sent' : 'received',
+      counterparty: row.sender_id === userId ? row.receiver_username : row.sender_username,
+      amount: parseFloat(row.amount),
+      token: row.token,
+      status: row.status,
+      txSignature: row.tx_signature,
+      network: row.network,
+      createdAt: row.created_at,
+    }));
+
+    res.json({ transactions });
+  } catch (err) {
+    console.error('Recent transactions error:', err);
+    res.status(500).json({ error: 'Failed to fetch recent transactions' });
+  }
+});
+
 router.get('/:id', requireAuth, async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
