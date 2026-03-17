@@ -26,7 +26,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#F4F5F7] flex items-center justify-center">
+      <div className="min-h-screen bg-[#0B0B1A] flex items-center justify-center">
         <div className="w-8 h-8 border-3 border-[#9945FF] border-t-transparent rounded-full animate-spin" />
       </div>
     );
@@ -44,7 +44,7 @@ function WalletGate({ children }: { children: React.ReactNode }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#F4F5F7] flex items-center justify-center">
+      <div className="min-h-screen bg-[#0B0B1A] flex items-center justify-center">
         <div className="w-8 h-8 border-3 border-[#9945FF] border-t-transparent rounded-full animate-spin" />
       </div>
     );

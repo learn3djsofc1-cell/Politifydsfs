@@ -120,4 +120,4 @@ Configured as a **static** deployment:
 - All 3D scenes, SVG animations, layout structure, and transitions are preserved from the original template — only text/content was changed
 - Logo uses the provided PNG image (`attached_assets/Frame_1171275135_1773729384302.png` → `public/sendlyfi-logo.png`)
 - Dashboard uses zero/empty state data only — no mock numbers or fake transactions
-- Dashboard design: light theme (#F4F5F7 bg, white cards, gray-200 borders), brand colors (#9945FF purple, #14F195 green, #00C2FF cyan), Motion animations
+- Auth & Dashboard design: dark glassmorphism theme (#0B0B1A base, bg-white/[0.07] frosted cards, backdrop-blur-2xl, border-white/[0.08]), brand gradient buttons (from-[#9945FF] to-[#7B2FE0] with shimmer sweep and glow), animated background orbs on auth pages, sidebar with gradient active indicator bar, mobile bottom nav with active dot
