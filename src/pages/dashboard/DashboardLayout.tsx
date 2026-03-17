@@ -152,14 +152,16 @@ export const DashboardLayout = () => {
             <Logo className="w-6 h-6" />
             <span className="font-bold text-base tracking-tight">SendlyFi</span>
           </Link>
-          <div className="flex items-center gap-1.5 shrink-0">
-            <NetworkSelector
-              isTestnet={isTestnet}
-              networkSwitching={networkSwitching}
-              networkError={networkError}
-              onSwitch={switchNetwork}
-              size="compact"
-            />
+          <div className="flex items-center gap-1.5 min-w-0">
+            <div className="min-w-0 overflow-hidden">
+              <NetworkSelector
+                isTestnet={isTestnet}
+                networkSwitching={networkSwitching}
+                networkError={networkError}
+                onSwitch={switchNetwork}
+                size="compact"
+              />
+            </div>
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
               className="p-2 text-gray-500 hover:text-gray-900 shrink-0"
