@@ -115,9 +115,33 @@ Configured as a **static** deployment:
 - Build command: `npm run build`
 - Public directory: `dist`
 
+## API Keys & Integrations
+- **Helius RPC**: Used for Solana balance fetching (devnet + mainnet), key stored in `HELIUS_API_KEY` env var
+- **CoinGecko**: Used for real-time SOL/USDC price data, key stored in `COINGECKO_API_KEY` env var
+- Price cache TTL: 30 seconds to avoid rate limits
+
+## Database Tables
+- `users`: id, zkid, username (unique), password_hash, network_mode (devnet/mainnet-beta), created_at
+- `wallets`: id, user_id, public_key, encrypted_private_key, network, created_at
+- `conversations`: id, user1_id, user2_id, created_at, updated_at
+- `messages`: id, conversation_id, sender_id, content, message_type (text/payment), transaction_id, created_at
+- `transactions`: id, sender_id, receiver_id, amount, token (SOL/USDC), tx_signature, network, status (pending/confirmed/failed), created_at
+
+## API Endpoints
+- `POST /api/auth/signup` — requires username + password, returns zkid + token
+- `POST /api/auth/login` — zkid + password login
+- `GET /api/auth/me` — returns user profile with username, networkMode, wallets
+- `POST /api/wallet/create` — creates Solana wallet with encrypted private key
+- `GET /api/wallet` — returns wallet info with real-time SOL/USDC balances via Helius RPC (network based on user's network_mode)
+- `GET /api/users/search?q=` — searches users by username prefix (excludes self)
+- `GET /api/users/network-mode` — get user's network mode
+- `PUT /api/users/network-mode` — toggle between devnet and mainnet-beta
+- `GET /api/prices` — real-time SOL and USDC prices from CoinGecko (30s cache)
+
 ## Notes
 - Vite file watcher ignores `.local/`, `.cache/`, `.git/`, `.agents/`, `tmp/` to prevent reload loops in Replit
 - All 3D scenes, SVG animations, layout structure, and transitions are preserved from the original template — only text/content was changed
 - Logo uses the provided PNG image (`attached_assets/Frame_1171275135_1773729384302.png` → `public/sendlyfi-logo.png`)
 - Dashboard uses zero/empty state data only — no mock numbers or fake transactions
 - Auth & Dashboard design: original default styling from initial template (light/white cards, purple accent buttons)
+- USDC mints: Devnet=Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr, Mainnet=EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v

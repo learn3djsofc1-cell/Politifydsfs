@@ -3,6 +3,8 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 interface User {
   id: number;
   zkid: string;
+  username: string;
+  networkMode: string;
   createdAt: string;
   wallets: Array<{ id: number; public_key: string; network: string; created_at: string }>;
 }
@@ -11,7 +13,7 @@ interface AuthContextType {
   user: User | null;
   token: string | null;
   loading: boolean;
-  signup: (password: string) => Promise<{ zkid: string }>;
+  signup: (password: string, username: string) => Promise<{ zkid: string }>;
   login: (zkid: string, password: string) => Promise<void>;
   logout: () => void;
   refreshUser: () => Promise<void>;
@@ -64,11 +66,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [token, fetchUser]);
 
-  const signup = async (password: string) => {
+  const signup = async (password: string, username: string) => {
     const res = await fetch('/api/auth/signup', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password }),
+      body: JSON.stringify({ password, username }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Signup failed');

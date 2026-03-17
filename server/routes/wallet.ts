@@ -7,8 +7,27 @@ import { requireAuth, AuthRequest } from '../middleware.js';
 
 const router = Router();
 
-const SOLANA_RPC_URL = process.env.SOLANA_RPC_URL || 'https://api.devnet.solana.com';
+const HELIUS_API_KEY = process.env.HELIUS_API_KEY || '';
+
 const USDC_MINT_DEVNET = 'Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr';
+const USDC_MINT_MAINNET = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
+
+function getHeliusRpcUrl(networkMode: string): string {
+  if (HELIUS_API_KEY) {
+    if (networkMode === 'mainnet-beta') {
+      return `https://mainnet.helius-rpc.com/?api-key=${HELIUS_API_KEY}`;
+    }
+    return `https://devnet.helius-rpc.com/?api-key=${HELIUS_API_KEY}`;
+  }
+  if (networkMode === 'mainnet-beta') {
+    return 'https://api.mainnet-beta.solana.com';
+  }
+  return 'https://api.devnet.solana.com';
+}
+
+function getUsdcMint(networkMode: string): string {
+  return networkMode === 'mainnet-beta' ? USDC_MINT_MAINNET : USDC_MINT_DEVNET;
+}
 
 router.post('/create', requireAuth, async (req: AuthRequest, res: Response) => {
   try {
@@ -68,6 +87,12 @@ router.get('/', requireAuth, async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
 
+    const userResult = await pool.query(
+      'SELECT network_mode FROM users WHERE id = $1',
+      [userId]
+    );
+    const networkMode = userResult.rows[0]?.network_mode || 'devnet';
+
     const result = await pool.query(
       'SELECT public_key, network, created_at FROM wallets WHERE user_id = $1',
       [userId]
@@ -83,15 +108,17 @@ router.get('/', requireAuth, async (req: AuthRequest, res: Response) => {
     let usdcBalance = 0;
 
     try {
-      const connection = new Connection(SOLANA_RPC_URL, 'confirmed');
+      const rpcUrl = getHeliusRpcUrl(networkMode);
+      const connection = new Connection(rpcUrl, 'confirmed');
       const pubkey = new PublicKey(wallet.public_key);
 
       const lamports = await connection.getBalance(pubkey);
       solBalance = lamports / LAMPORTS_PER_SOL;
 
       try {
+        const usdcMint = getUsdcMint(networkMode);
         const tokenAccounts = await connection.getParsedTokenAccountsByOwner(pubkey, {
-          mint: new PublicKey(USDC_MINT_DEVNET),
+          mint: new PublicKey(usdcMint),
         });
         if (tokenAccounts.value.length > 0) {
           usdcBalance = tokenAccounts.value[0].account.data.parsed.info.tokenAmount.uiAmount || 0;
@@ -99,7 +126,8 @@ router.get('/', requireAuth, async (req: AuthRequest, res: Response) => {
       } catch {
         usdcBalance = 0;
       }
-    } catch {
+    } catch (rpcErr) {
+      console.error('RPC balance fetch error:', rpcErr);
       solBalance = 0;
       usdcBalance = 0;
     }
@@ -108,6 +136,7 @@ router.get('/', requireAuth, async (req: AuthRequest, res: Response) => {
       hasWallet: true,
       publicKey: wallet.public_key,
       network: wallet.network,
+      networkMode,
       createdAt: wallet.created_at,
       balances: {
         sol: solBalance,

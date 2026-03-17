@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { Eye, EyeOff, Copy, Check, ArrowRight, Shield, Lock } from 'lucide-react';
+import { Eye, EyeOff, Copy, Check, ArrowRight, Shield, Lock, User } from 'lucide-react';
 import { Logo } from '../components/Logo';
 import { useAuth } from '../contexts/AuthContext';
 
 export const SignUpPage = () => {
   const { signup } = useAuth();
   const navigate = useNavigate();
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -16,6 +17,11 @@ export const SignUpPage = () => {
   const [zkid, setZkid] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
+  const usernameChecks = {
+    length: username.length >= 3 && username.length <= 20,
+    format: /^[a-z0-9_]*$/.test(username.toLowerCase()) && username.length > 0,
+  };
+
   const passwordChecks = {
     length: password.length >= 8,
     uppercase: /[A-Z]/.test(password),
@@ -23,7 +29,7 @@ export const SignUpPage = () => {
     match: password === confirmPassword && confirmPassword.length > 0,
   };
 
-  const allValid = Object.values(passwordChecks).every(Boolean);
+  const allValid = Object.values(usernameChecks).every(Boolean) && Object.values(passwordChecks).every(Boolean);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,7 +37,7 @@ export const SignUpPage = () => {
     setError('');
     setLoading(true);
     try {
-      const result = await signup(password);
+      const result = await signup(password, username.trim().toLowerCase());
       setZkid(result.zkid);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to create account');
@@ -119,11 +125,27 @@ export const SignUpPage = () => {
             <span className="font-bold text-xl tracking-tight text-gray-900">SendlyFi</span>
           </Link>
           <h1 className="text-2xl font-bold text-gray-900 mb-1">Create your account</h1>
-          <p className="text-gray-500 text-sm">Set a password to receive your unique ZKID</p>
+          <p className="text-gray-500 text-sm">Choose a username and set a password to receive your unique ZKID</p>
         </div>
 
         <div className="bg-white rounded-2xl border border-gray-200 p-8">
           <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Username</label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value.toLowerCase())}
+                  placeholder="Choose a username"
+                  maxLength={20}
+                  autoComplete="username"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-10 pr-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-[#9945FF]/40 focus:ring-2 focus:ring-[#9945FF]/10 transition-all"
+                />
+              </div>
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Password</label>
               <div className="relative">
@@ -161,15 +183,17 @@ export const SignUpPage = () => {
 
             <div className="space-y-2">
               {[
-                { key: 'length', label: 'At least 8 characters' },
-                { key: 'uppercase', label: 'One uppercase letter' },
-                { key: 'number', label: 'One number' },
-                { key: 'match', label: 'Passwords match' },
-              ].map((check) => (
-                <div key={check.key} className="flex items-center gap-2 text-xs">
+                { key: 'u_length', label: 'Username: 3-20 characters', check: usernameChecks.length },
+                { key: 'u_format', label: 'Username: letters, numbers, underscores only', check: usernameChecks.format },
+                { key: 'length', label: 'At least 8 characters', check: passwordChecks.length },
+                { key: 'uppercase', label: 'One uppercase letter', check: passwordChecks.uppercase },
+                { key: 'number', label: 'One number', check: passwordChecks.number },
+                { key: 'match', label: 'Passwords match', check: passwordChecks.match },
+              ].map((item) => (
+                <div key={item.key} className="flex items-center gap-2 text-xs">
                   <div
                     className={`w-4 h-4 rounded-full flex items-center justify-center ${
-                      passwordChecks[check.key as keyof typeof passwordChecks]
+                      item.check
                         ? 'bg-[#14F195]/20 text-[#0DAA6D]'
                         : 'bg-gray-100 text-gray-400'
                     }`}
@@ -178,12 +202,12 @@ export const SignUpPage = () => {
                   </div>
                   <span
                     className={
-                      passwordChecks[check.key as keyof typeof passwordChecks]
+                      item.check
                         ? 'text-gray-700'
                         : 'text-gray-400'
                     }
                   >
-                    {check.label}
+                    {item.label}
                   </span>
                 </div>
               ))}

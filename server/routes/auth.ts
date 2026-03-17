@@ -12,7 +12,24 @@ const router = Router();
 
 router.post('/signup', async (req, res: Response) => {
   try {
-    const { password } = req.body;
+    const { password, username } = req.body;
+
+    if (!username || typeof username !== 'string') {
+      res.status(400).json({ error: 'Username is required' });
+      return;
+    }
+
+    const trimmedUsername = username.trim().toLowerCase();
+
+    if (trimmedUsername.length < 3 || trimmedUsername.length > 20) {
+      res.status(400).json({ error: 'Username must be 3-20 characters' });
+      return;
+    }
+
+    if (!/^[a-z0-9_]+$/.test(trimmedUsername)) {
+      res.status(400).json({ error: 'Username can only contain letters, numbers, and underscores' });
+      return;
+    }
 
     if (!password || typeof password !== 'string') {
       res.status(400).json({ error: 'Password is required' });
@@ -34,12 +51,21 @@ router.post('/signup', async (req, res: Response) => {
       return;
     }
 
+    const existingUsername = await pool.query(
+      'SELECT 1 FROM users WHERE username = $1',
+      [trimmedUsername]
+    );
+    if (existingUsername.rows.length > 0) {
+      res.status(409).json({ error: 'Username is already taken' });
+      return;
+    }
+
     const zkid = await generateUniqueZKID();
     const passwordHash = await hashPassword(password);
 
     const result = await pool.query(
-      'INSERT INTO users (zkid, password_hash) VALUES ($1, $2) RETURNING id, zkid, created_at',
-      [zkid, passwordHash]
+      'INSERT INTO users (zkid, username, password_hash) VALUES ($1, $2, $3) RETURNING id, zkid, username, created_at',
+      [zkid, trimmedUsername, passwordHash]
     );
 
     const user = result.rows[0];
@@ -47,6 +73,7 @@ router.post('/signup', async (req, res: Response) => {
 
     res.status(201).json({
       zkid: user.zkid,
+      username: user.username,
       token,
       createdAt: user.created_at,
     });
@@ -73,7 +100,7 @@ router.post('/login', async (req, res: Response) => {
     }
 
     const result = await pool.query(
-      'SELECT id, zkid, password_hash, created_at FROM users WHERE zkid = $1',
+      'SELECT id, zkid, username, password_hash, created_at FROM users WHERE zkid = $1',
       [zkidUpper]
     );
 
@@ -94,6 +121,7 @@ router.post('/login', async (req, res: Response) => {
 
     res.json({
       zkid: user.zkid,
+      username: user.username,
       token,
       createdAt: user.created_at,
     });
@@ -106,7 +134,7 @@ router.post('/login', async (req, res: Response) => {
 router.get('/me', requireAuth, async (req: AuthRequest, res: Response) => {
   try {
     const result = await pool.query(
-      'SELECT id, zkid, created_at FROM users WHERE id = $1',
+      'SELECT id, zkid, username, network_mode, created_at FROM users WHERE id = $1',
       [req.user!.userId]
     );
 
@@ -125,6 +153,8 @@ router.get('/me', requireAuth, async (req: AuthRequest, res: Response) => {
     res.json({
       id: user.id,
       zkid: user.zkid,
+      username: user.username,
+      networkMode: user.network_mode,
       createdAt: user.created_at,
       wallets: walletResult.rows,
     });

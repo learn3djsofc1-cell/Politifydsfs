@@ -46,3 +46,9 @@ deploymentTarget = "autoscale"
 build = ["npm", "run", "build"]
 publicDir = "dist"
 run = ["node", "./dist/index.cjs"]
+
+[userenv]
+
+[userenv.shared]
+COINGECKO_API_KEY = "CG-t4bHGmbr6hqGvnfbMggxXvWB"
+HELIUS_API_KEY = "d701d36a-adf6-4915-bdbd-a8764077b649"
