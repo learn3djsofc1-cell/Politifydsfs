@@ -41,9 +41,9 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 function WalletGate({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
+  const { user, loading, token } = useAuth();
 
-  if (loading) {
+  if (loading || (token && !user)) {
     return (
       <div className="min-h-screen bg-[#F4F5F7] flex items-center justify-center">
         <div className="w-8 h-8 border-3 border-[#9945FF] border-t-transparent rounded-full animate-spin" />

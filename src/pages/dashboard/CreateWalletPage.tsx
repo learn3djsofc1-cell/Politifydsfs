@@ -1,12 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { Wallet, Copy, Check, ArrowRight, Eye, EyeOff, Lock, Shield } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
 export const CreateWalletPage = () => {
-  const { token, refreshUser } = useAuth();
+  const { token, refreshUser, user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!authLoading && user && user.wallets.length > 0) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [authLoading, user, navigate]);
+
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -123,6 +130,14 @@ export const CreateWalletPage = () => {
             </button>
           </div>
         </motion.div>
+      </div>
+    );
+  }
+
+  if (authLoading || (user && user.wallets.length > 0)) {
+    return (
+      <div className="min-h-screen bg-[#F4F5F7] flex items-center justify-center">
+        <div className="w-8 h-8 border-3 border-[#9945FF] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }

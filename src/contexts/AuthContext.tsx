@@ -54,6 +54,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (token) {
+      setLoading(true);
       fetchUser(token).finally(() => setLoading(false));
     } else {
       setLoading(false);
@@ -88,7 +89,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Login failed');
     localStorage.setItem('sendlyfi_token', data.token);
+    setLoading(true);
     setToken(data.token);
+    try {
+      await fetchUser(data.token);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const logout = () => {
