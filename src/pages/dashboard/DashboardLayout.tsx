@@ -1,9 +1,9 @@
 import React, { useState, useCallback } from 'react';
-import { NavLink, Outlet, Link, useLocation } from 'react-router-dom';
+import { NavLink, Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   LayoutDashboard, MessageSquare, CreditCard, CalendarClock,
-  Settings, Menu, X, Wallet
+  Settings, Menu, X, Wallet, LogOut
 } from 'lucide-react';
 import { Logo } from '../../components/Logo';
 import { useAuth } from '../../contexts/AuthContext';
@@ -17,21 +17,72 @@ const navItems = [
   { to: '/dashboard/settings', icon: Settings, label: 'Settings', end: false },
 ];
 
+function NetworkSelector({
+  isTestnet,
+  networkSwitching,
+  networkError,
+  onSwitch,
+  size = 'default',
+}: {
+  isTestnet: boolean;
+  networkSwitching: boolean;
+  networkError: boolean;
+  onSwitch: (mode: 'devnet' | 'mainnet-beta') => void;
+  size?: 'default' | 'compact';
+}) {
+  const px = size === 'compact' ? 'px-2.5 py-1' : 'px-3 py-1.5';
+  const textSize = 'text-xs';
+
+  return (
+    <div className="flex items-center gap-1">
+      {networkError && (
+        <span className="text-xs text-red-500 font-medium mr-1">Switch failed</span>
+      )}
+      <div className={`inline-flex rounded-lg border border-gray-200 bg-gray-100 p-0.5 ${networkSwitching ? 'opacity-50 pointer-events-none' : ''}`}>
+        <button
+          onClick={() => onSwitch('devnet')}
+          disabled={networkSwitching}
+          className={`flex items-center gap-1.5 ${px} rounded-md ${textSize} font-medium transition-all ${
+            isTestnet
+              ? 'bg-amber-500 text-white shadow-sm'
+              : 'text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          <span className={`w-1.5 h-1.5 rounded-full ${isTestnet ? 'bg-white' : 'bg-gray-400'}`} />
+          Testnet
+        </button>
+        <button
+          onClick={() => onSwitch('mainnet-beta')}
+          disabled={networkSwitching}
+          className={`flex items-center gap-1.5 ${px} rounded-md ${textSize} font-medium transition-all ${
+            !isTestnet
+              ? 'bg-green-500 text-white shadow-sm'
+              : 'text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          <span className={`w-1.5 h-1.5 rounded-full ${!isTestnet ? 'bg-white' : 'bg-gray-400'}`} />
+          Mainnet
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export const DashboardLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
-  const { user, token, refreshUser } = useAuth();
+  const navigate = useNavigate();
+  const { user, token, logout, refreshUser } = useAuth();
   const [networkSwitching, setNetworkSwitching] = useState(false);
   const [networkError, setNetworkError] = useState(false);
 
   const networkMode = user?.networkMode || 'devnet';
   const isTestnet = networkMode === 'devnet';
 
-  const toggleNetwork = useCallback(async () => {
-    if (!token || networkSwitching) return;
+  const switchNetwork = useCallback(async (mode: 'devnet' | 'mainnet-beta') => {
+    if (!token || networkSwitching || mode === networkMode) return;
     setNetworkSwitching(true);
     setNetworkError(false);
-    const newMode = isTestnet ? 'mainnet-beta' : 'devnet';
     try {
       const res = await fetch('/api/user/network-mode', {
         method: 'PUT',
@@ -39,7 +90,7 @@ export const DashboardLayout = () => {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ networkMode: newMode }),
+        body: JSON.stringify({ networkMode: mode }),
       });
       if (!res.ok) throw new Error('Network switch failed');
       await refreshUser();
@@ -49,7 +100,12 @@ export const DashboardLayout = () => {
     } finally {
       setNetworkSwitching(false);
     }
-  }, [token, isTestnet, networkSwitching, refreshUser]);
+  }, [token, networkMode, networkSwitching, refreshUser]);
+
+  const handleLogout = useCallback(() => {
+    logout();
+    navigate('/login');
+  }, [logout, navigate]);
 
   return (
     <div className="min-h-screen bg-[#F4F5F7] text-gray-900 flex">
@@ -78,6 +134,16 @@ export const DashboardLayout = () => {
             </NavLink>
           ))}
         </nav>
+
+        <div className="px-3 pb-4 border-t border-gray-200 pt-3">
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-gray-500 hover:text-red-600 hover:bg-red-50 transition-all w-full"
+          >
+            <LogOut className="w-5 h-5" />
+            Logout
+          </button>
+        </div>
       </aside>
 
       <div className="lg:hidden fixed top-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-xl border-b border-gray-200">
@@ -87,17 +153,13 @@ export const DashboardLayout = () => {
             <span className="font-bold text-base tracking-tight">SendlyFi</span>
           </Link>
           <div className="flex items-center gap-2">
-            <button
-              onClick={toggleNetwork}
-              disabled={networkSwitching}
-              className={`px-2 py-1 rounded-lg text-xs font-medium transition-colors ${
-                isTestnet
-                  ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
-                  : 'bg-green-100 text-green-700 hover:bg-green-200'
-              } ${networkSwitching ? 'opacity-50' : ''}`}
-            >
-              {isTestnet ? 'Testnet' : 'Mainnet'}
-            </button>
+            <NetworkSelector
+              isTestnet={isTestnet}
+              networkSwitching={networkSwitching}
+              networkError={networkError}
+              onSwitch={switchNetwork}
+              size="compact"
+            />
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
               className="p-2 text-gray-500 hover:text-gray-900"
@@ -134,7 +196,7 @@ export const DashboardLayout = () => {
                   <X size={18} />
                 </button>
               </div>
-              <nav className="px-3 py-4 flex flex-col gap-1">
+              <nav className="flex-1 px-3 py-4 flex flex-col gap-1">
                 {navItems.map((item) => (
                   <NavLink
                     key={item.to}
@@ -154,6 +216,15 @@ export const DashboardLayout = () => {
                   </NavLink>
                 ))}
               </nav>
+              <div className="px-3 pb-4 border-t border-gray-200 pt-3">
+                <button
+                  onClick={() => { handleLogout(); setSidebarOpen(false); }}
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-gray-500 hover:text-red-600 hover:bg-red-50 transition-all w-full"
+                >
+                  <LogOut className="w-5 h-5" />
+                  Logout
+                </button>
+              </div>
             </motion.div>
           </>
         )}
@@ -169,23 +240,12 @@ export const DashboardLayout = () => {
             </span>
           </div>
           <div className="flex items-center gap-3">
-            {networkError && (
-              <span className="text-xs text-red-500 font-medium">Switch failed</span>
-            )}
-            <button
-              onClick={toggleNetwork}
-              disabled={networkSwitching}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                networkError
-                  ? 'bg-red-100 text-red-700'
-                  : isTestnet
-                    ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
-                    : 'bg-green-100 text-green-700 hover:bg-green-200'
-              } ${networkSwitching ? 'opacity-50' : ''}`}
-            >
-              <span className={`w-2 h-2 rounded-full ${isTestnet ? 'bg-amber-500' : 'bg-green-500'}`} />
-              {isTestnet ? 'Testnet' : 'Mainnet'}
-            </button>
+            <NetworkSelector
+              isTestnet={isTestnet}
+              networkSwitching={networkSwitching}
+              networkError={networkError}
+              onSwitch={switchNetwork}
+            />
             <span className="text-sm font-medium text-gray-600">@{user?.username || 'user'}</span>
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#9945FF]/15 to-[#14F195]/15 flex items-center justify-center">
               <span className="text-xs font-bold text-gray-500">{user?.username ? user.username.slice(0, 2).toUpperCase() : 'SF'}</span>

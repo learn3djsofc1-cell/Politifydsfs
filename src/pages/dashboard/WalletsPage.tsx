@@ -176,7 +176,7 @@ export const WalletsPage = () => {
                     ? 'bg-amber-100 text-amber-700'
                     : 'bg-green-100 text-green-700'
                 }`}>
-                  {isTestnet ? 'Devnet (Testnet)' : 'Mainnet'}
+                  {isTestnet ? 'Testnet' : 'Mainnet'}
                 </span>
               </div>
             </div>
@@ -273,7 +273,7 @@ export const WalletsPage = () => {
           <div className="flex items-center justify-between text-sm">
             <span className="text-gray-500">Network</span>
             <span className={`font-medium ${isTestnet ? 'text-amber-600' : 'text-green-600'}`}>
-              {isTestnet ? 'Devnet (Testnet)' : 'Mainnet Beta'}
+              {isTestnet ? 'Testnet' : 'Mainnet'}
             </span>
           </div>
           <div className="flex items-center justify-between text-sm">
