@@ -32,13 +32,14 @@ router.post('/parse-intent', requireAuth, async (req: AuthRequest, res: Response
 
 SUPPORTED TOKENS: SOL (also "solana", "sol"), USDC (also "usdc", "usd coin")
 
-PAYMENT KEYWORDS (English): send, transfer, pay, give, tip, forward, deposit
-PAYMENT KEYWORDS (Indonesian): kirim, kirimkan, transfer, bayar, bayarkan, kasih, beri, berikan, tolong kirimkan, mau kirim, bisa kirim
+PAYMENT KEYWORDS: send, transfer, pay, give, tip, forward, deposit, wire
+
+LANGUAGE RULE: Only recognize English payment commands. If the message is not in English, treat it as plain text (type "text"). Do not parse non-English messages as payment intents.
 
 RULES:
 1. If the message contains a payment intent, extract ALL payment items. A single message can contain MULTIPLE tokens (e.g., "send 100 USDC and 1 SOL" = two items).
 2. For each payment item, extract: amount (number) and token (SOL or USDC).
-3. If a user says "send all", "send my balance", "send everything", "kirim semua", "kirim semua saldo" for a token, set send_all=true for that item and amount=0.
+3. If a user says "send all", "send my balance", "send everything" for a token, set send_all=true for that item and amount=0.
 4. If no specific token is mentioned with "send all/everything", assume BOTH SOL and USDC with send_all=true.
 5. If no token is specified for a specific amount, default to USDC.
 6. Extract @username mentions as the recipient (e.g., "@test12345" -> recipient="test12345"). Only extract the FIRST @mention.
@@ -59,15 +60,16 @@ For non-payment:
 EXAMPLES:
 "send 100 usdc" -> {"type":"payment","items":[{"amount":100,"token":"USDC","send_all":false}],"recipient":null}
 "send 100 usdc and 1 sol to @alice" -> {"type":"payment","items":[{"amount":100,"token":"USDC","send_all":false},{"amount":1,"token":"SOL","send_all":false}],"recipient":"alice"}
-"kirim 50 usdc ke @test12345" -> {"type":"payment","items":[{"amount":50,"token":"USDC","send_all":false}],"recipient":"test12345"}
 "send all my sol" -> {"type":"payment","items":[{"amount":0,"token":"SOL","send_all":true}],"recipient":null}
 "send everything" -> {"type":"payment","items":[{"amount":0,"token":"SOL","send_all":true},{"amount":0,"token":"USDC","send_all":true}],"recipient":null}
-"tolong kirimkan 20 usdc" -> {"type":"payment","items":[{"amount":20,"token":"USDC","send_all":false}],"recipient":null}
+"please transfer 20 usdc" -> {"type":"payment","items":[{"amount":20,"token":"USDC","send_all":false}],"recipient":null}
 "how are you?" -> {"type":"text"}
 "what's my balance?" -> {"type":"text"}
-"bisa kirim 10 usdc dan 0.5 sol?" -> {"type":"payment","items":[{"amount":10,"token":"USDC","send_all":false},{"amount":0.5,"token":"SOL","send_all":false}],"recipient":null}
+"pay 10 usdc and 0.5 sol" -> {"type":"payment","items":[{"amount":10,"token":"USDC","send_all":false},{"amount":0.5,"token":"SOL","send_all":false}],"recipient":null}
 "i need you sending my balance 100 usdc and 1 solana to @test12345" -> {"type":"payment","items":[{"amount":100,"token":"USDC","send_all":false},{"amount":1,"token":"SOL","send_all":false}],"recipient":"test12345"}
-"kasih 10 sol ke dia" -> {"type":"payment","items":[{"amount":10,"token":"SOL","send_all":false}],"recipient":null}
+"wire 10 sol to @alice" -> {"type":"payment","items":[{"amount":10,"token":"SOL","send_all":false}],"recipient":"alice"}
+"envoyer 50 usdc" -> {"type":"text"}
+"senden 10 sol" -> {"type":"text"}
 
 User message: "${message.replace(/"/g, '\\"')}"`;
 

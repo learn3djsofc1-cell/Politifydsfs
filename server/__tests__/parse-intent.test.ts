@@ -81,16 +81,16 @@ const testCases: TestCase[] = [
   { message: 'send 100 usdc', expectedType: 'payment', expectedItems: [{ amount: 100, token: 'USDC' }], description: 'Simple USDC send' },
   { message: 'send 0.5 sol', expectedType: 'payment', expectedItems: [{ amount: 0.5, token: 'SOL' }], description: 'Simple SOL send' },
   { message: 'transfer 50 usdc and 2 sol', expectedType: 'payment', expectedItems: [{ token: 'USDC' }, { token: 'SOL' }], description: 'Multi-token transfer' },
-  { message: 'kirim 100 usdc', expectedType: 'payment', expectedItems: [{ amount: 100, token: 'USDC' }], description: 'Indonesian: kirim' },
-  { message: 'bayar 10 sol', expectedType: 'payment', expectedItems: [{ amount: 10, token: 'SOL' }], description: 'Indonesian: bayar' },
-  { message: 'tolong kirimkan 20 usdc', expectedType: 'payment', expectedItems: [{ amount: 20, token: 'USDC' }], description: 'Indonesian: tolong kirimkan' },
-  { message: 'mau kirim 5 sol', expectedType: 'payment', expectedItems: [{ amount: 5, token: 'SOL' }], description: 'Indonesian: mau kirim' },
+  { message: 'wire 100 usdc', expectedType: 'payment', expectedItems: [{ amount: 100, token: 'USDC' }], description: 'Wire keyword' },
+  { message: 'deposit 10 sol', expectedType: 'payment', expectedItems: [{ amount: 10, token: 'SOL' }], description: 'Deposit keyword' },
+  { message: 'forward 20 usdc', expectedType: 'payment', expectedItems: [{ amount: 20, token: 'USDC' }], description: 'Forward keyword' },
+  { message: 'please send 5 sol', expectedType: 'payment', expectedItems: [{ amount: 5, token: 'SOL' }], description: 'Polite send request' },
   { message: 'pay 25 usdc', expectedType: 'payment', expectedItems: [{ amount: 25, token: 'USDC' }], description: 'Pay keyword' },
   { message: 'I want to pay 100 usdc', expectedType: 'payment', expectedItems: [{ amount: 100, token: 'USDC' }], description: 'Conversational pay' },
-  { message: 'bisa kirim 10 usdc dan 0.5 sol?', expectedType: 'payment', expectedItems: [{ amount: 10, token: 'USDC' }, { amount: 0.5, token: 'SOL' }], description: 'Indonesian multi-token with question mark' },
+  { message: 'can you send 10 usdc and 0.5 sol?', expectedType: 'payment', expectedItems: [{ amount: 10, token: 'USDC' }, { amount: 0.5, token: 'SOL' }], description: 'English multi-token with question mark' },
   { message: 'i need you to send 100 usdc and 1 sol', expectedType: 'payment', expectedItems: [{ amount: 100, token: 'USDC' }, { amount: 1, token: 'SOL' }], description: 'Complex English multi-token' },
   { message: 'please transfer 50 usdc', expectedType: 'payment', expectedItems: [{ amount: 50, token: 'USDC' }], description: 'Polite transfer' },
-  { message: 'kasih 10 sol ke dia', expectedType: 'payment', expectedItems: [{ amount: 10, token: 'SOL' }], description: 'Indonesian: kasih' },
+  { message: 'send 10 sol to them', expectedType: 'payment', expectedItems: [{ amount: 10, token: 'SOL' }], description: 'Informal send with pronoun' },
   { message: 'send 10', expectedType: 'payment', expectedItems: [{ amount: 10, token: 'USDC' }], description: 'No token defaults to USDC' },
   { message: 'transfer 0.001 sol', expectedType: 'payment', expectedItems: [{ amount: 0.001, token: 'SOL' }], description: 'Small decimal amount' },
   { message: 'give 5 sol', expectedType: 'payment', expectedItems: [{ amount: 5, token: 'SOL' }], description: 'Give keyword' },
@@ -101,7 +101,7 @@ const testCases: TestCase[] = [
 
   { message: 'send all my sol', expectedType: 'payment', expectSendAll: true, description: 'Send all SOL triggers balance resolution' },
   { message: 'send everything', expectedType: 'payment', expectSendAll: true, description: 'Send everything triggers balance resolution for both tokens' },
-  { message: 'kirim semua saldo sol', expectedType: 'payment', expectSendAll: true, description: 'Indonesian send all SOL' },
+  { message: 'send my entire sol balance', expectedType: 'payment', expectSendAll: true, description: 'Send entire balance phrasing' },
 
   { message: 'how are you?', expectedType: 'text', description: 'Casual greeting - not payment' },
   { message: "what's my balance?", expectedType: 'text', description: 'Balance inquiry - not payment' },
@@ -109,9 +109,9 @@ const testCases: TestCase[] = [
   { message: 'can you help me?', expectedType: 'text', description: 'Help request - not payment' },
   { message: 'nice to meet you', expectedType: 'text', description: 'Social - not payment' },
   { message: 'thanks for the info', expectedType: 'text', description: 'Thank you - not payment' },
-  { message: 'apa kabar?', expectedType: 'text', description: 'Indonesian greeting - not payment' },
-  { message: 'terima kasih', expectedType: 'text', description: 'Indonesian thanks - not payment' },
-  { message: 'berapa saldo saya?', expectedType: 'text', description: 'Indonesian balance inquiry - not payment' },
+  { message: 'envoyer 50 usdc', expectedType: 'text', description: 'Non-English (French) payment keyword treated as plain text' },
+  { message: 'senden 10 sol', expectedType: 'text', description: 'Non-English (German) payment keyword treated as plain text' },
+  { message: 'por favor transferir 20 usdc', expectedType: 'text', description: 'Non-English (Spanish) phrase treated as plain text' },
   { message: 'I like crypto', expectedType: 'text', description: 'Crypto mention without payment intent' },
   { message: 'good morning', expectedType: 'text', description: 'Morning greeting - not payment' },
 ];
@@ -134,11 +134,11 @@ async function runTests() {
   });
 
   testCases.push({
-    message: `kirim 10 sol ke @${secondUsername}`,
+    message: `transfer 10 sol to @${secondUsername}`,
     expectedType: 'payment',
     expectedItems: [{ amount: 10, token: 'SOL' }],
     expectRecipientExtracted: true,
-    description: 'Indonesian @mention resolution with existing user',
+    description: 'Transfer with @mention resolution with existing user',
   });
 
   let passed = 0;
