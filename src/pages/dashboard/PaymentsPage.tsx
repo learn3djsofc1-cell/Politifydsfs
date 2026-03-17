@@ -1,6 +1,18 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'motion/react';
-import { CalendarClock, Plus, Clock, RefreshCw, Bell } from 'lucide-react';
+import {
+  Globe, Users, Wallet, ArrowRightLeft, Coins,
+  DollarSign, Clock, RefreshCw, AlertCircle
+} from 'lucide-react';
+
+interface NetworkStats {
+  totalAccounts: number;
+  totalWallets: number;
+  totalTransactions: number;
+  totalVolumeSol: number;
+  totalVolumeUsdc: number;
+  networkUptimeDays: number;
+}
 
 const container = {
   hidden: { opacity: 0 },
@@ -12,13 +24,89 @@ const item = {
   show: { opacity: 1, y: 0 },
 };
 
-const features = [
-  { icon: Clock, label: 'Flexible Scheduling', desc: 'Daily, weekly, monthly, or custom' },
-  { icon: RefreshCw, label: 'Auto-retry', desc: 'Smart retry on failures' },
-  { icon: Bell, label: 'Notifications', desc: 'Alerts for every payment' },
-];
+function formatNumber(n: number): string {
+  return n.toLocaleString('en-US');
+}
 
-export const PaymentsPage = () => {
+function formatVolume(n: number, decimals: number): string {
+  return n.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+}
+
+export const NetworkPage = () => {
+  const [stats, setStats] = useState<NetworkStats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchStats = useCallback(async () => {
+    try {
+      const res = await fetch('/api/network/stats');
+      if (!res.ok) throw new Error('Failed to fetch');
+      const data = await res.json();
+      setStats(data);
+      setError('');
+    } catch {
+      setError('Failed to load network stats');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    setLoading(true);
+    fetchStats();
+  }, [fetchStats]);
+
+  useEffect(() => {
+    const interval = setInterval(fetchStats, 60000);
+    return () => clearInterval(interval);
+  }, [fetchStats]);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchStats();
+    setRefreshing(false);
+  };
+
+  const statCards = stats ? [
+    {
+      icon: Users,
+      label: 'Total Accounts',
+      value: formatNumber(stats.totalAccounts),
+      color: '#9945FF',
+    },
+    {
+      icon: Wallet,
+      label: 'Wallets Created',
+      value: formatNumber(stats.totalWallets),
+      color: '#14F195',
+    },
+    {
+      icon: ArrowRightLeft,
+      label: 'Total Transactions',
+      value: formatNumber(stats.totalTransactions),
+      color: '#00C2FF',
+    },
+    {
+      icon: Coins,
+      label: 'Volume (SOL)',
+      value: `${formatVolume(stats.totalVolumeSol, 4)} SOL`,
+      color: '#9945FF',
+    },
+    {
+      icon: DollarSign,
+      label: 'Volume (USDC)',
+      value: `${formatVolume(stats.totalVolumeUsdc, 2)} USDC`,
+      color: '#14F195',
+    },
+    {
+      icon: Clock,
+      label: 'Network Uptime',
+      value: `${formatNumber(stats.networkUptimeDays)} days`,
+      color: '#00C2FF',
+    },
+  ] : [];
+
   return (
     <motion.div
       variants={container}
@@ -28,49 +116,89 @@ export const PaymentsPage = () => {
     >
       <motion.div variants={item} className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold tracking-tight text-gray-900">Payments</h1>
-          <p className="text-gray-600 text-sm mt-1">Scheduled and recurring payments</p>
+          <h1 className="text-2xl lg:text-3xl font-bold tracking-tight text-gray-900">Network</h1>
+          <p className="text-gray-600 text-sm mt-1">SendlyFi global network statistics</p>
         </div>
-        <button className="px-4 py-2.5 rounded-xl bg-[#9945FF] text-white text-sm font-medium hover:bg-[#8030E0] transition-colors flex items-center gap-2">
-          <Plus className="w-4 h-4" />
-          Set Up Payment
+        <button
+          onClick={handleRefresh}
+          disabled={refreshing}
+          className="p-2.5 rounded-xl bg-white border border-gray-200 text-gray-500 hover:text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
+        >
+          <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
         </button>
       </motion.div>
 
-      <motion.div variants={item} className="rounded-2xl bg-white border border-gray-200 overflow-hidden mb-8">
-        <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
-          <div className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center mb-4">
-            <CalendarClock className="w-7 h-7 text-gray-400" />
+      {error && (
+        <motion.div variants={item} className="mb-6">
+          <div className="flex items-center gap-3 p-4 rounded-2xl bg-red-50 border border-red-200">
+            <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
+            <p className="text-red-700 text-sm">{error}</p>
+            <button
+              onClick={handleRefresh}
+              className="ml-auto text-red-600 hover:text-red-800 text-sm font-medium"
+            >
+              Retry
+            </button>
           </div>
-          <h3 className="text-lg font-semibold text-gray-800 mb-2">No scheduled payments</h3>
-          <p className="text-gray-500 text-sm max-w-sm mb-6">
-            Set up recurring transfers, automatic bill splits, or payroll distributions to automate your finances.
-          </p>
-          <button className="px-6 py-3 rounded-xl bg-[#9945FF] text-white text-sm font-medium hover:bg-[#8030E0] transition-colors flex items-center gap-2">
-            <Plus className="w-4 h-4" />
-            Set Up Your First Payment
-          </button>
+        </motion.div>
+      )}
+
+      <motion.div variants={item} className="mb-8">
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#9945FF] to-[#7B2FE0] p-6 lg:p-8">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full blur-[120px] opacity-10 pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-[#14F195] rounded-full blur-[100px] opacity-15 pointer-events-none" />
+          <div className="relative z-10 flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center">
+              <Globe className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h2 className="text-white font-semibold text-lg">SendlyFi Network</h2>
+              <p className="text-white/60 text-sm">
+                Aggregated platform statistics — privacy-first, numbers only
+              </p>
+            </div>
+          </div>
         </div>
       </motion.div>
 
-      <motion.div variants={item}>
-        <h2 className="text-sm font-semibold text-gray-600 uppercase tracking-wider mb-4">Payment Features</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {features.map((f) => (
-            <div
-              key={f.label}
-              className="rounded-2xl bg-white border border-gray-200 p-5 flex items-start gap-4"
-            >
-              <div className="w-10 h-10 rounded-xl bg-[#14F195]/10 flex items-center justify-center flex-shrink-0">
-                <f.icon className="w-5 h-5 text-[#0DAA6D]" />
+      {loading ? (
+        <motion.div variants={item} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[1, 2, 3, 4, 5, 6].map(i => (
+            <div key={i} className="rounded-2xl bg-white border border-gray-200 p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-xl bg-gray-100 animate-pulse" />
+                <div className="h-4 w-24 bg-gray-100 rounded animate-pulse" />
               </div>
-              <div>
-                <h3 className="font-medium text-gray-800 text-sm">{f.label}</h3>
-                <p className="text-gray-500 text-xs mt-0.5">{f.desc}</p>
-              </div>
+              <div className="h-8 w-32 bg-gray-100 rounded animate-pulse" />
             </div>
           ))}
-        </div>
+        </motion.div>
+      ) : (
+        <motion.div variants={item} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {statCards.map((stat) => (
+            <div
+              key={stat.label}
+              className="rounded-2xl bg-white border border-gray-200 p-6 hover:shadow-sm transition-shadow"
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center"
+                  style={{ backgroundColor: `${stat.color}15` }}
+                >
+                  <stat.icon className="w-5 h-5" style={{ color: stat.color }} />
+                </div>
+                <span className="text-gray-500 text-sm font-medium">{stat.label}</span>
+              </div>
+              <span className="text-2xl font-bold text-gray-900">{stat.value}</span>
+            </div>
+          ))}
+        </motion.div>
+      )}
+
+      <motion.div variants={item} className="mt-6">
+        <p className="text-center text-gray-400 text-xs">
+          Stats refresh automatically every 60 seconds
+        </p>
       </motion.div>
     </motion.div>
   );

@@ -16,7 +16,7 @@ import { DashboardLayout } from './pages/dashboard/DashboardLayout';
 import { OverviewPage } from './pages/dashboard/OverviewPage';
 import { ChatPage } from './pages/dashboard/ChatPage';
 import { CardsPage } from './pages/dashboard/CardsPage';
-import { PaymentsPage } from './pages/dashboard/PaymentsPage';
+import { NetworkPage } from './pages/dashboard/PaymentsPage';
 import { SettingsPage } from './pages/dashboard/SettingsPage';
 import { WalletsPage } from './pages/dashboard/WalletsPage';
 import { CreateWalletPage } from './pages/dashboard/CreateWalletPage';
@@ -120,7 +120,7 @@ export default function App() {
         <Route path="wallets" element={<WalletsPage />} />
         <Route path="chat" element={<ChatPage />} />
         <Route path="cards" element={<CardsPage />} />
-        <Route path="payments" element={<PaymentsPage />} />
+        <Route path="network" element={<NetworkPage />} />
         <Route path="settings" element={<SettingsPage />} />
       </Route>
     </Routes>

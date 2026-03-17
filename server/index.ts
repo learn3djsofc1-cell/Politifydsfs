@@ -8,6 +8,7 @@ import pricesRoutes from './routes/prices.js';
 import chatRoutes from './routes/chat.js';
 import transactionRoutes from './routes/transactions.js';
 import cardRoutes from './routes/cards.js';
+import networkRoutes from './routes/network.js';
 
 const app = express();
 const PORT = parseInt(process.env.API_PORT || '3001', 10);
@@ -27,6 +28,7 @@ app.use('/api/prices', pricesRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/cards', cardRoutes);
+app.use('/api/network', networkRoutes);
 
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error('Unhandled error:', err.message);

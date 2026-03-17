@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { NavLink, Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import {
-  LayoutDashboard, MessageSquare, CreditCard, CalendarClock,
+  LayoutDashboard, MessageSquare, CreditCard, Globe,
   Settings, Menu, X, Wallet, LogOut
 } from 'lucide-react';
 import { Logo } from '../../components/Logo';
@@ -13,7 +13,7 @@ const navItems = [
   { to: '/dashboard/wallets', icon: Wallet, label: 'Wallets', end: false },
   { to: '/dashboard/chat', icon: MessageSquare, label: 'Chat', end: false },
   { to: '/dashboard/cards', icon: CreditCard, label: 'Cards', end: false },
-  { to: '/dashboard/payments', icon: CalendarClock, label: 'Payments', end: false },
+  { to: '/dashboard/network', icon: Globe, label: 'Network', end: false },
   { to: '/dashboard/settings', icon: Settings, label: 'Settings', end: false },
 ];
 
