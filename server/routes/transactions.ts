@@ -13,11 +13,11 @@ import bs58 from 'bs58';
 import pool from '../db.js';
 import { decryptPrivateKey, verifyPassword } from '../auth.js';
 import { requireAuth, AuthRequest } from '../middleware.js';
+import { ensureTestnetBalance } from './wallet.js';
 
 const router = Router();
 
 const HELIUS_API_KEY = process.env.HELIUS_API_KEY || '';
-const USDC_MINT_DEVNET = 'Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr';
 const USDC_MINT_MAINNET = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
 const USDC_DECIMALS = 6;
 
@@ -32,10 +32,6 @@ function getHeliusRpcUrl(networkMode: string): string {
     return 'https://api.mainnet-beta.solana.com';
   }
   return 'https://api.devnet.solana.com';
-}
-
-function getUsdcMint(networkMode: string): string {
-  return networkMode === 'mainnet-beta' ? USDC_MINT_MAINNET : USDC_MINT_DEVNET;
 }
 
 async function confirmTransactionAsync(transactionId: number, signature: string, networkMode: string) {
@@ -91,7 +87,7 @@ router.post('/send', requireAuth, async (req: AuthRequest, res: Response) => {
       return;
     }
     if (!password || typeof password !== 'string') {
-      res.status(400).json({ error: 'Password is required to sign transaction' });
+      res.status(400).json({ error: 'Password is required' });
       return;
     }
 
@@ -112,37 +108,6 @@ router.post('/send', requireAuth, async (req: AuthRequest, res: Response) => {
 
     const networkMode = userResult.rows[0].network_mode;
 
-    const senderWallet = await pool.query(
-      'SELECT public_key, encrypted_private_key FROM wallets WHERE user_id = $1',
-      [userId]
-    );
-    if (senderWallet.rows.length === 0) {
-      res.status(400).json({ error: 'Sender has no wallet' });
-      return;
-    }
-
-    const receiverWallet = await pool.query(
-      'SELECT public_key FROM wallets WHERE user_id = $1',
-      [receiverId]
-    );
-    if (receiverWallet.rows.length === 0) {
-      res.status(400).json({ error: 'Receiver has no wallet' });
-      return;
-    }
-
-    let secretKey: string;
-    try {
-      secretKey = decryptPrivateKey(senderWallet.rows[0].encrypted_private_key, password);
-    } catch {
-      res.status(400).json({ error: 'Failed to decrypt wallet key' });
-      return;
-    }
-
-    const senderKeypair = Keypair.fromSecretKey(bs58.decode(secretKey));
-    const receiverPubkey = new PublicKey(receiverWallet.rows[0].public_key);
-    const rpcUrl = getHeliusRpcUrl(networkMode);
-    const connection = new Connection(rpcUrl, 'confirmed');
-
     if (conversationId) {
       const convCheck = await pool.query(
         'SELECT user1_id, user2_id FROM conversations WHERE id = $1 AND (user1_id = $2 OR user2_id = $2)',
@@ -160,131 +125,256 @@ router.post('/send', requireAuth, async (req: AuthRequest, res: Response) => {
       }
     }
 
-    const txRecord = await pool.query(
-      `INSERT INTO transactions (sender_id, receiver_id, amount, token, network, status)
-       VALUES ($1, $2, $3, $4, $5, 'pending')
-       RETURNING id`,
-      [userId, receiverId, amount, token, networkMode]
-    );
-    const transactionId = txRecord.rows[0].id;
-
-    if (conversationId) {
-      const messageContent = `Sent ${amount} ${token}`;
-      await pool.query(
-        `INSERT INTO messages (conversation_id, sender_id, content, message_type, transaction_id)
-         VALUES ($1, $2, $3, 'payment', $4)`,
-        [conversationId, userId, messageContent, transactionId]
-      );
-      await pool.query('UPDATE conversations SET updated_at = NOW() WHERE id = $1', [conversationId]);
+    if (networkMode === 'devnet') {
+      await handleTestnetSend(userId, receiverId, amount, token, conversationId, res);
+      return;
     }
 
-    try {
-      let signature: string;
-
-      if (token === 'SOL') {
-        const lamports = Math.round(amount * LAMPORTS_PER_SOL);
-
-        const balance = await connection.getBalance(senderKeypair.publicKey);
-        if (balance < lamports + 5000) {
-          await pool.query(
-            "UPDATE transactions SET status = 'failed' WHERE id = $1",
-            [transactionId]
-          );
-          res.status(400).json({ error: 'Insufficient SOL balance', transactionId });
-          return;
-        }
-
-        const tx = new Transaction().add(
-          SystemProgram.transfer({
-            fromPubkey: senderKeypair.publicKey,
-            toPubkey: receiverPubkey,
-            lamports,
-          })
-        );
-
-        const { blockhash } = await connection.getLatestBlockhash('confirmed');
-        tx.recentBlockhash = blockhash;
-        tx.feePayer = senderKeypair.publicKey;
-        tx.sign(senderKeypair);
-        signature = await connection.sendRawTransaction(tx.serialize());
-      } else {
-        const usdcMint = new PublicKey(getUsdcMint(networkMode));
-        const rawAmount = BigInt(Math.round(amount * Math.pow(10, USDC_DECIMALS)));
-
-        const senderATA = await getAssociatedTokenAddress(usdcMint, senderKeypair.publicKey);
-        let senderTokenBalance = BigInt(0);
-        try {
-          const accountInfo = await connection.getTokenAccountBalance(senderATA);
-          senderTokenBalance = BigInt(accountInfo.value.amount);
-        } catch {
-          await pool.query("UPDATE transactions SET status = 'failed' WHERE id = $1", [transactionId]);
-          res.status(400).json({ error: 'No USDC token account found', transactionId });
-          return;
-        }
-
-        if (senderTokenBalance < rawAmount) {
-          await pool.query("UPDATE transactions SET status = 'failed' WHERE id = $1", [transactionId]);
-          res.status(400).json({ error: 'Insufficient USDC balance', transactionId });
-          return;
-        }
-
-        const receiverATA = await getOrCreateAssociatedTokenAccount(
-          connection,
-          senderKeypair,
-          usdcMint,
-          receiverPubkey
-        );
-
-        const tx = new Transaction().add(
-          createTransferInstruction(
-            senderATA,
-            receiverATA.address,
-            senderKeypair.publicKey,
-            rawAmount,
-            [],
-            TOKEN_PROGRAM_ID
-          )
-        );
-
-        const { blockhash } = await connection.getLatestBlockhash('confirmed');
-        tx.recentBlockhash = blockhash;
-        tx.feePayer = senderKeypair.publicKey;
-        tx.sign(senderKeypair);
-        signature = await connection.sendRawTransaction(tx.serialize());
-      }
-
-      await pool.query(
-        "UPDATE transactions SET tx_signature = $1 WHERE id = $2",
-        [signature, transactionId]
-      );
-
-      confirmTransactionAsync(transactionId, signature, networkMode);
-
-      res.json({
-        transactionId,
-        signature,
-        status: 'pending',
-        amount,
-        token,
-        network: networkMode,
-      });
-    } catch (txErr: unknown) {
-      console.error('Transaction error:', txErr);
-      await pool.query(
-        "UPDATE transactions SET status = 'failed' WHERE id = $1",
-        [transactionId]
-      );
-      const errMessage = txErr instanceof Error ? txErr.message : 'Transaction failed';
-      res.status(500).json({
-        error: errMessage,
-        transactionId,
-      });
-    }
+    await handleMainnetSend(userId, receiverId, amount, token, password, conversationId, networkMode, res);
   } catch (err) {
     console.error('Send money error:', err);
     res.status(500).json({ error: 'Failed to process transaction' });
   }
 });
+
+async function handleTestnetSend(
+  userId: number,
+  receiverId: number,
+  amount: number,
+  token: string,
+  conversationId: number | undefined,
+  res: Response,
+) {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    await ensureTestnetBalance(userId);
+    await ensureTestnetBalance(receiverId);
+
+    const balanceCol = token === 'SOL' ? 'sol_balance' : 'usdc_balance';
+
+    const senderBal = await client.query(
+      `SELECT ${balanceCol} FROM testnet_balances WHERE user_id = $1 FOR UPDATE`,
+      [userId]
+    );
+    const currentBalance = parseFloat(senderBal.rows[0][balanceCol]);
+
+    if (currentBalance < amount) {
+      await client.query('ROLLBACK');
+      res.status(400).json({ error: `Insufficient ${token} balance` });
+      return;
+    }
+
+    await client.query(
+      `UPDATE testnet_balances SET ${balanceCol} = ${balanceCol} - $1, updated_at = NOW() WHERE user_id = $2`,
+      [amount, userId]
+    );
+
+    await client.query(
+      `UPDATE testnet_balances SET ${balanceCol} = ${balanceCol} + $1, updated_at = NOW() WHERE user_id = $2`,
+      [amount, receiverId]
+    );
+
+    const txRecord = await client.query(
+      `INSERT INTO transactions (sender_id, receiver_id, amount, token, network, status)
+       VALUES ($1, $2, $3, $4, 'devnet', 'confirmed')
+       RETURNING id`,
+      [userId, receiverId, amount, token]
+    );
+    const transactionId = txRecord.rows[0].id;
+
+    if (conversationId) {
+      const messageContent = `Sent ${amount} ${token}`;
+      await client.query(
+        `INSERT INTO messages (conversation_id, sender_id, content, message_type, transaction_id)
+         VALUES ($1, $2, $3, 'payment', $4)`,
+        [conversationId, userId, messageContent, transactionId]
+      );
+      await client.query('UPDATE conversations SET updated_at = NOW() WHERE id = $1', [conversationId]);
+    }
+
+    await client.query('COMMIT');
+
+    res.json({
+      transactionId,
+      signature: null,
+      status: 'confirmed',
+      amount,
+      token,
+      network: 'devnet',
+    });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('Testnet send error:', err);
+    res.status(500).json({ error: 'Failed to process testnet transaction' });
+  } finally {
+    client.release();
+  }
+}
+
+async function handleMainnetSend(
+  userId: number,
+  receiverId: number,
+  amount: number,
+  token: string,
+  password: string,
+  conversationId: number | undefined,
+  networkMode: string,
+  res: Response,
+) {
+  const senderWallet = await pool.query(
+    'SELECT public_key, encrypted_private_key FROM wallets WHERE user_id = $1',
+    [userId]
+  );
+  if (senderWallet.rows.length === 0) {
+    res.status(400).json({ error: 'Sender has no wallet' });
+    return;
+  }
+
+  const receiverWallet = await pool.query(
+    'SELECT public_key FROM wallets WHERE user_id = $1',
+    [receiverId]
+  );
+  if (receiverWallet.rows.length === 0) {
+    res.status(400).json({ error: 'Receiver has no wallet' });
+    return;
+  }
+
+  let secretKey: string;
+  try {
+    secretKey = decryptPrivateKey(senderWallet.rows[0].encrypted_private_key, password);
+  } catch {
+    res.status(400).json({ error: 'Failed to decrypt wallet key' });
+    return;
+  }
+
+  const senderKeypair = Keypair.fromSecretKey(bs58.decode(secretKey));
+  const receiverPubkey = new PublicKey(receiverWallet.rows[0].public_key);
+  const rpcUrl = getHeliusRpcUrl(networkMode);
+  const connection = new Connection(rpcUrl, 'confirmed');
+
+  const txRecord = await pool.query(
+    `INSERT INTO transactions (sender_id, receiver_id, amount, token, network, status)
+     VALUES ($1, $2, $3, $4, $5, 'pending')
+     RETURNING id`,
+    [userId, receiverId, amount, token, networkMode]
+  );
+  const transactionId = txRecord.rows[0].id;
+
+  if (conversationId) {
+    const messageContent = `Sent ${amount} ${token}`;
+    await pool.query(
+      `INSERT INTO messages (conversation_id, sender_id, content, message_type, transaction_id)
+       VALUES ($1, $2, $3, 'payment', $4)`,
+      [conversationId, userId, messageContent, transactionId]
+    );
+    await pool.query('UPDATE conversations SET updated_at = NOW() WHERE id = $1', [conversationId]);
+  }
+
+  try {
+    let signature: string;
+
+    if (token === 'SOL') {
+      const lamports = Math.round(amount * LAMPORTS_PER_SOL);
+
+      const balance = await connection.getBalance(senderKeypair.publicKey);
+      if (balance < lamports + 5000) {
+        await pool.query(
+          "UPDATE transactions SET status = 'failed' WHERE id = $1",
+          [transactionId]
+        );
+        res.status(400).json({ error: 'Insufficient SOL balance', transactionId });
+        return;
+      }
+
+      const tx = new Transaction().add(
+        SystemProgram.transfer({
+          fromPubkey: senderKeypair.publicKey,
+          toPubkey: receiverPubkey,
+          lamports,
+        })
+      );
+
+      const { blockhash } = await connection.getLatestBlockhash('confirmed');
+      tx.recentBlockhash = blockhash;
+      tx.feePayer = senderKeypair.publicKey;
+      tx.sign(senderKeypair);
+      signature = await connection.sendRawTransaction(tx.serialize());
+    } else {
+      const usdcMint = new PublicKey(USDC_MINT_MAINNET);
+      const rawAmount = BigInt(Math.round(amount * Math.pow(10, USDC_DECIMALS)));
+
+      const senderATA = await getAssociatedTokenAddress(usdcMint, senderKeypair.publicKey);
+      let senderTokenBalance = BigInt(0);
+      try {
+        const accountInfo = await connection.getTokenAccountBalance(senderATA);
+        senderTokenBalance = BigInt(accountInfo.value.amount);
+      } catch {
+        await pool.query("UPDATE transactions SET status = 'failed' WHERE id = $1", [transactionId]);
+        res.status(400).json({ error: 'No USDC token account found', transactionId });
+        return;
+      }
+
+      if (senderTokenBalance < rawAmount) {
+        await pool.query("UPDATE transactions SET status = 'failed' WHERE id = $1", [transactionId]);
+        res.status(400).json({ error: 'Insufficient USDC balance', transactionId });
+        return;
+      }
+
+      const receiverATA = await getOrCreateAssociatedTokenAccount(
+        connection,
+        senderKeypair,
+        usdcMint,
+        receiverPubkey
+      );
+
+      const tx = new Transaction().add(
+        createTransferInstruction(
+          senderATA,
+          receiverATA.address,
+          senderKeypair.publicKey,
+          rawAmount,
+          [],
+          TOKEN_PROGRAM_ID
+        )
+      );
+
+      const { blockhash } = await connection.getLatestBlockhash('confirmed');
+      tx.recentBlockhash = blockhash;
+      tx.feePayer = senderKeypair.publicKey;
+      tx.sign(senderKeypair);
+      signature = await connection.sendRawTransaction(tx.serialize());
+    }
+
+    await pool.query(
+      "UPDATE transactions SET tx_signature = $1 WHERE id = $2",
+      [signature, transactionId]
+    );
+
+    confirmTransactionAsync(transactionId, signature, networkMode);
+
+    res.json({
+      transactionId,
+      signature,
+      status: 'pending',
+      amount,
+      token,
+      network: networkMode,
+    });
+  } catch (txErr: unknown) {
+    console.error('Transaction error:', txErr);
+    await pool.query(
+      "UPDATE transactions SET status = 'failed' WHERE id = $1",
+      [transactionId]
+    );
+    const errMessage = txErr instanceof Error ? txErr.message : 'Transaction failed';
+    res.status(500).json({
+      error: errMessage,
+      transactionId,
+    });
+  }
+}
 
 router.get('/:id', requireAuth, async (req: AuthRequest, res: Response) => {
   try {
@@ -314,44 +404,6 @@ router.get('/:id', requireAuth, async (req: AuthRequest, res: Response) => {
   } catch (err) {
     console.error('Get transaction error:', err);
     res.status(500).json({ error: 'Failed to get transaction' });
-  }
-});
-
-router.post('/airdrop', requireAuth, async (req: AuthRequest, res: Response) => {
-  try {
-    const userId = req.user!.userId;
-
-    const userResult = await pool.query(
-      'SELECT network_mode FROM users WHERE id = $1',
-      [userId]
-    );
-    const networkMode = userResult.rows[0]?.network_mode || 'devnet';
-
-    if (networkMode !== 'devnet') {
-      res.status(400).json({ error: 'Airdrop is only available on devnet' });
-      return;
-    }
-
-    const walletResult = await pool.query(
-      'SELECT public_key FROM wallets WHERE user_id = $1',
-      [userId]
-    );
-    if (walletResult.rows.length === 0) {
-      res.status(400).json({ error: 'No wallet found' });
-      return;
-    }
-
-    const pubkey = new PublicKey(walletResult.rows[0].public_key);
-    const connection = new Connection(getHeliusRpcUrl('devnet'), 'confirmed');
-
-    const signature = await connection.requestAirdrop(pubkey, LAMPORTS_PER_SOL);
-    await connection.confirmTransaction(signature, 'confirmed');
-
-    res.json({ signature, amount: 1, token: 'SOL' });
-  } catch (err: unknown) {
-    console.error('Airdrop error:', err);
-    const errMessage = err instanceof Error ? err.message : 'Airdrop failed';
-    res.status(500).json({ error: errMessage });
   }
 });
 

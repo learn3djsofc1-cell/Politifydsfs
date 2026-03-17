@@ -16,7 +16,7 @@ A React + TypeScript landing page and dashboard app for **SendlyFi**, a crypto-t
 - `/dashboard` — Protected dashboard (redirects to /login if unauthenticated; wallet gate redirects to /dashboard/create-wallet if no wallet) with nested routes:
   - `/dashboard` (index) — Overview: wallet balance (live SOL/USDC from Helius RPC), USD conversion (CoinGecko prices), public key display, network badge, quick actions, income/spending cards, empty recent activity, auto-refresh (30s + focus)
   - `/dashboard/wallets` — Wallets page: full wallet address display, SOL/USDC balances with USD conversion, copy address, Solana Explorer link, network badge (Devnet/Mainnet), skeleton loading, error/retry, auto-refresh
-  - `/dashboard/chat` — Full chat system: user search, conversation list, real-time messaging (4s polling), send SOL/USDC payments with on-chain transactions, payment message bubbles with Explorer links, devnet airdrop
+  - `/dashboard/chat` — Full chat system: user search, conversation list, real-time messaging (4s polling), send SOL/USDC payments (testnet: simulated DB transfers; mainnet: on-chain), payment message bubbles with Explorer links
   - `/dashboard/cards` — Virtual card management with empty state, Create Card CTA, feature cards
   - `/dashboard/payments` — Scheduled payments with empty state, Set Up Payment CTA, feature cards
   - `/dashboard/settings` — Account settings with profile, security, preferences sections
@@ -132,13 +132,14 @@ Configured as a **static** deployment:
 - `conversations`: id, user1_id, user2_id, created_at, updated_at
 - `messages`: id, conversation_id, sender_id, content, message_type (text/payment), transaction_id, created_at
 - `transactions`: id, sender_id, receiver_id, amount, token (SOL/USDC), tx_signature, network, status (pending/confirmed/failed), created_at
+- `testnet_balances`: id, user_id (unique), sol_balance (default 10), usdc_balance (default 1000), updated_at
 
 ## API Endpoints
 - `POST /api/auth/signup` — requires username + password, returns zkid + token
 - `POST /api/auth/login` — zkid + password login
 - `GET /api/auth/me` — returns user profile with username, networkMode, wallets
 - `POST /api/wallet/create` — creates Solana wallet with encrypted private key
-- `GET /api/wallet` — returns wallet info with real-time SOL/USDC balances via Helius RPC (network based on user's network_mode)
+- `GET /api/wallet` — returns wallet info with balances (testnet: from DB testnet_balances table; mainnet: from Solana RPC)
 - `GET /api/users/search?q=` — searches users by username prefix (excludes self)
 - `GET /api/users/network-mode` — get user's network mode
 - `PUT /api/users/network-mode` — toggle between devnet and mainnet-beta
@@ -147,9 +148,8 @@ Configured as a **static** deployment:
 - `POST /api/chat/conversations` — create or get existing conversation with another user
 - `GET /api/chat/conversations/:id/messages` — get messages with pagination (before cursor)
 - `POST /api/chat/conversations/:id/messages` — send a text message
-- `POST /api/transactions/send` — send SOL/USDC on-chain transfer (requires password to decrypt private key)
+- `POST /api/transactions/send` — send SOL/USDC (testnet: DB balance transfer, instant confirmed; mainnet: on-chain Solana transfer with async confirmation)
 - `GET /api/transactions/:id` — get transaction details
-- `POST /api/transactions/airdrop` — request 1 SOL devnet airdrop
 
 ## Notes
 - Vite file watcher ignores `.local/`, `.cache/`, `.git/`, `.agents/`, `tmp/` to prevent reload loops in Replit

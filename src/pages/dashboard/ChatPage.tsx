@@ -3,7 +3,7 @@ import { motion } from 'motion/react';
 import {
   Search, MessageSquare, Send, Plus, DollarSign,
   ChevronLeft, ExternalLink, Loader2, AlertCircle,
-  Check, X, Coins, Droplets
+  Check, X, Coins
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -67,7 +67,6 @@ export const ChatPage = () => {
   const [paymentPassword, setPaymentPassword] = useState('');
   const [sendingPayment, setSendingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState('');
-  const [airdropping, setAirdropping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const pollRef = useRef<NodeJS.Timeout | null>(null);
@@ -246,27 +245,6 @@ export const ChatPage = () => {
     }
   };
 
-  const requestAirdrop = async () => {
-    if (!token || airdropping) return;
-    setAirdropping(true);
-    try {
-      const res = await fetch('/api/transactions/airdrop', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) {
-        alert('1 SOL airdropped to your wallet!');
-      } else {
-        const data = await res.json();
-        alert(data.error || 'Airdrop failed');
-      }
-    } catch {
-      alert('Airdrop request failed');
-    } finally {
-      setAirdropping(false);
-    }
-  };
-
   const selectConversation = (conv: Conversation) => {
     setActiveConversation(conv);
     setShowConversation(true);
@@ -309,16 +287,6 @@ export const ChatPage = () => {
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-xl font-bold text-gray-900">Chat</h1>
             <div className="flex items-center gap-2">
-              {isTestnet && (
-                <button
-                  onClick={requestAirdrop}
-                  disabled={airdropping}
-                  className="w-9 h-9 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center hover:bg-blue-100 transition-colors"
-                  title="Request 1 SOL Airdrop (Testnet)"
-                >
-                  <Droplets className={`w-5 h-5 ${airdropping ? 'animate-pulse' : ''}`} />
-                </button>
-              )}
               <button
                 onClick={() => { setShowSearch(!showSearch); setSearchQuery(''); setSearchResults([]); }}
                 className="w-9 h-9 rounded-xl bg-[#9945FF]/10 text-[#9945FF] flex items-center justify-center hover:bg-[#9945FF]/20 transition-colors"

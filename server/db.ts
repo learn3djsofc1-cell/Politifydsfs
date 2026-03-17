@@ -119,6 +119,17 @@ export async function initDatabase() {
       CREATE INDEX IF NOT EXISTS idx_messages_conversation ON messages(conversation_id, created_at)
     `);
 
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS testnet_balances (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        sol_balance DECIMAL(20, 9) NOT NULL DEFAULT 10,
+        usdc_balance DECIMAL(20, 9) NOT NULL DEFAULT 1000,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        CONSTRAINT idx_testnet_balances_user UNIQUE (user_id)
+      )
+    `);
+
     const healthCheck = await client.query('SELECT NOW() as time');
     console.log(`Database connected at ${healthCheck.rows[0].time}`);
     console.log('Database tables initialized successfully');

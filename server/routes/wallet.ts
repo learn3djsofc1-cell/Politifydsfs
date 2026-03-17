@@ -9,7 +9,6 @@ const router = Router();
 
 const HELIUS_API_KEY = process.env.HELIUS_API_KEY || '';
 
-const USDC_MINT_DEVNET = 'Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr';
 const USDC_MINT_MAINNET = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
 
 function getHeliusRpcUrl(networkMode: string): string {
@@ -25,8 +24,11 @@ function getHeliusRpcUrl(networkMode: string): string {
   return 'https://api.devnet.solana.com';
 }
 
-function getUsdcMint(networkMode: string): string {
-  return networkMode === 'mainnet-beta' ? USDC_MINT_MAINNET : USDC_MINT_DEVNET;
+export async function ensureTestnetBalance(userId: number): Promise<void> {
+  await pool.query(
+    `INSERT INTO testnet_balances (user_id) VALUES ($1) ON CONFLICT (user_id) DO NOTHING`,
+    [userId]
+  );
 }
 
 router.post('/create', requireAuth, async (req: AuthRequest, res: Response) => {
@@ -73,6 +75,8 @@ router.post('/create', requireAuth, async (req: AuthRequest, res: Response) => {
       [userId, publicKey, encryptedKey, 'solana']
     );
 
+    await ensureTestnetBalance(userId);
+
     res.status(201).json({
       publicKey,
       secretKey: secretKeyBase58,
@@ -104,6 +108,28 @@ router.get('/', requireAuth, async (req: AuthRequest, res: Response) => {
     }
 
     const wallet = result.rows[0];
+
+    if (networkMode === 'devnet') {
+      await ensureTestnetBalance(userId);
+      const balResult = await pool.query(
+        'SELECT sol_balance, usdc_balance FROM testnet_balances WHERE user_id = $1',
+        [userId]
+      );
+      const row = balResult.rows[0];
+      res.json({
+        hasWallet: true,
+        publicKey: wallet.public_key,
+        network: wallet.network,
+        networkMode,
+        createdAt: wallet.created_at,
+        balances: {
+          sol: parseFloat(row.sol_balance),
+          usdc: parseFloat(row.usdc_balance),
+        },
+      });
+      return;
+    }
+
     let solBalance = 0;
     let usdcBalance = 0;
 
@@ -116,9 +142,8 @@ router.get('/', requireAuth, async (req: AuthRequest, res: Response) => {
       solBalance = lamports / LAMPORTS_PER_SOL;
 
       try {
-        const usdcMint = getUsdcMint(networkMode);
         const tokenAccounts = await connection.getParsedTokenAccountsByOwner(pubkey, {
-          mint: new PublicKey(usdcMint),
+          mint: new PublicKey(USDC_MINT_MAINNET),
         });
         for (const acct of tokenAccounts.value) {
           usdcBalance += acct.account.data.parsed.info.tokenAmount.uiAmount || 0;
