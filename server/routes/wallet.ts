@@ -120,8 +120,8 @@ router.get('/', requireAuth, async (req: AuthRequest, res: Response) => {
         const tokenAccounts = await connection.getParsedTokenAccountsByOwner(pubkey, {
           mint: new PublicKey(usdcMint),
         });
-        if (tokenAccounts.value.length > 0) {
-          usdcBalance = tokenAccounts.value[0].account.data.parsed.info.tokenAmount.uiAmount || 0;
+        for (const acct of tokenAccounts.value) {
+          usdcBalance += acct.account.data.parsed.info.tokenAmount.uiAmount || 0;
         }
       } catch {
         usdcBalance = 0;
