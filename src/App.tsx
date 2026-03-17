@@ -16,7 +16,7 @@ import { DashboardLayout } from './pages/dashboard/DashboardLayout';
 import { OverviewPage } from './pages/dashboard/OverviewPage';
 import { ChatPage } from './pages/dashboard/ChatPage';
 import { CardsPage } from './pages/dashboard/CardsPage';
-import { NetworkPage } from './pages/dashboard/PaymentsPage';
+import { NetworkPage } from './pages/dashboard/NetworkPage';
 import { SettingsPage } from './pages/dashboard/SettingsPage';
 import { WalletsPage } from './pages/dashboard/WalletsPage';
 import { CreateWalletPage } from './pages/dashboard/CreateWalletPage';
