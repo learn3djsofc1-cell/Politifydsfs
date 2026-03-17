@@ -69,7 +69,7 @@ export const OverviewPage = () => {
     } finally {
       setLoadingWallet(false);
     }
-  }, [token]);
+  }, [token, user?.networkMode]);
 
   useEffect(() => {
     fetchData();

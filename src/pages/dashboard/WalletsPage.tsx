@@ -61,7 +61,7 @@ export const WalletsPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, [token, user?.networkMode]);
 
   useEffect(() => {
     fetchData();
