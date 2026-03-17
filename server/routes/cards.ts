@@ -8,7 +8,7 @@ const router = Router();
 const DELETION_COOLDOWN_DAYS = 7;
 
 function generateLast4(): string {
-  return crypto.randomInt(1000, 9999).toString();
+  return crypto.randomInt(1000, 10000).toString();
 }
 
 router.get('/', requireAuth, async (req: AuthRequest, res: Response) => {
