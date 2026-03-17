@@ -14,7 +14,8 @@ A React + TypeScript landing page and dashboard app for **SendlyFi**, a crypto-t
 - `/login` — Log in with ZKID + password
 - `/dashboard/create-wallet` — Wallet creation page (shown if user has no wallet)
 - `/dashboard` — Protected dashboard (redirects to /login if unauthenticated; wallet gate redirects to /dashboard/create-wallet if no wallet) with nested routes:
-  - `/dashboard` (index) — Overview: wallet balance (live SOL/USDC from Solana RPC), public key display, quick actions, income/spending cards, empty recent activity
+  - `/dashboard` (index) — Overview: wallet balance (live SOL/USDC from Helius RPC), USD conversion (CoinGecko prices), public key display, network badge, quick actions, income/spending cards, empty recent activity, auto-refresh (30s + focus)
+  - `/dashboard/wallets` — Wallets page: full wallet address display, SOL/USDC balances with USD conversion, copy address, Solana Explorer link, network badge (Devnet/Mainnet), skeleton loading, error/retry, auto-refresh
   - `/dashboard/chat` — Chat banking interface with empty conversations list, message input, payment composer
   - `/dashboard/cards` — Virtual card management with empty state, Create Card CTA, feature cards
   - `/dashboard/payments` — Scheduled payments with empty state, Set Up Payment CTA, feature cards
@@ -71,9 +72,10 @@ src/
     LoginPage.tsx                # Login form (ZKID + password)
     DocsPage.tsx                 # Full documentation page with sidebar + content
     dashboard/
-      DashboardLayout.tsx        # Responsive layout: sidebar (desktop) + bottom tabs (mobile)
+      DashboardLayout.tsx        # Responsive layout: sidebar (desktop) + bottom tabs (mobile), testnet/mainnet toggle
       CreateWalletPage.tsx       # Solana wallet creation with private key reveal + Phantom import instructions
-      OverviewPage.tsx           # Live wallet balance (SOL/USDC via RPC), public key, quick actions, income/spending, activity
+      WalletsPage.tsx            # Wallet detail page: address, SOL/USDC balances, USD conversion, copy, Explorer link
+      OverviewPage.tsx           # Live wallet balance (SOL/USDC via Helius RPC), USD prices, quick actions, income/spending, activity
       ChatPage.tsx               # Chat interface with conversations list + message area
       CardsPage.tsx              # Virtual cards management with empty state
       PaymentsPage.tsx           # Scheduled payments with empty state

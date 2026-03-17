@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'motion/react';
 import {
   Wallet, Send, Download, ArrowLeftRight, DollarSign,
-  TrendingUp, Clock, ArrowUpRight, Coins, Copy, Check, RefreshCw
+  TrendingUp, Clock, ArrowUpRight, Coins, Copy, Check, RefreshCw, AlertCircle
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -10,11 +10,17 @@ interface WalletInfo {
   hasWallet: boolean;
   publicKey: string;
   network: string;
+  networkMode: string;
   createdAt: string;
   balances: {
     sol: number;
     usdc: number;
   };
+}
+
+interface Prices {
+  sol: number;
+  usdc: number;
 }
 
 const quickActions = [
@@ -35,36 +41,56 @@ const item = {
 };
 
 export const OverviewPage = () => {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const [wallet, setWallet] = useState<WalletInfo | null>(null);
+  const [prices, setPrices] = useState<Prices | null>(null);
   const [loadingWallet, setLoadingWallet] = useState(true);
   const [copied, setCopied] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState('');
 
-  const fetchWallet = useCallback(async () => {
+  const fetchData = useCallback(async () => {
     if (!token) return;
+    setError('');
     try {
-      const res = await fetch('/api/wallet', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      if (data.hasWallet) {
-        setWallet(data);
+      const [walletRes, pricesRes] = await Promise.all([
+        fetch('/api/wallet', { headers: { Authorization: `Bearer ${token}` } }),
+        fetch('/api/prices', { headers: { Authorization: `Bearer ${token}` } }),
+      ]);
+      if (!walletRes.ok) throw new Error('Failed to fetch wallet');
+      const walletData = await walletRes.json();
+      if (walletData.hasWallet) setWallet(walletData);
+      if (pricesRes.ok) {
+        const pricesData = await pricesRes.json();
+        if (pricesData.sol !== undefined) setPrices(pricesData);
       }
     } catch {
-      // silent
+      setError('Failed to load data. Please try again.');
     } finally {
       setLoadingWallet(false);
     }
   }, [token]);
 
   useEffect(() => {
-    fetchWallet();
-  }, [fetchWallet]);
+    fetchData();
+  }, [fetchData]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchData();
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [fetchData]);
+
+  useEffect(() => {
+    const handleFocus = () => fetchData();
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [fetchData]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    await fetchWallet();
+    await fetchData();
     setRefreshing(false);
   };
 
@@ -75,8 +101,13 @@ export const OverviewPage = () => {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const networkMode = user?.networkMode || 'devnet';
+  const isTestnet = networkMode === 'devnet';
   const solBalance = wallet?.balances.sol ?? 0;
   const usdcBalance = wallet?.balances.usdc ?? 0;
+  const solUsd = prices ? solBalance * prices.sol : 0;
+  const usdcUsd = prices ? usdcBalance * prices.usdc : 0;
+  const totalUsd = solUsd + usdcUsd;
   const truncatedAddress = wallet
     ? `${wallet.publicKey.slice(0, 6)}...${wallet.publicKey.slice(-4)}`
     : '';
@@ -90,8 +121,30 @@ export const OverviewPage = () => {
     >
       <motion.div variants={item} className="mb-8">
         <h1 className="text-2xl lg:text-3xl font-bold tracking-tight text-gray-900">Dashboard</h1>
-        <p className="text-gray-600 text-sm mt-1">Welcome to SendlyFi</p>
+        <p className="text-gray-600 text-sm mt-1">
+          Welcome back, @{user?.username || 'user'}
+          {isTestnet && (
+            <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
+              Testnet
+            </span>
+          )}
+        </p>
       </motion.div>
+
+      {error && (
+        <motion.div variants={item} className="mb-6">
+          <div className="flex items-center gap-3 p-4 rounded-2xl bg-red-50 border border-red-200">
+            <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
+            <p className="text-red-700 text-sm">{error}</p>
+            <button
+              onClick={handleRefresh}
+              className="ml-auto text-red-600 hover:text-red-800 text-sm font-medium"
+            >
+              Retry
+            </button>
+          </div>
+        </motion.div>
+      )}
 
       <motion.div
         variants={item}
@@ -105,6 +158,11 @@ export const OverviewPage = () => {
             <div className="flex items-center gap-2 text-white/70 text-sm">
               <Wallet className="w-4 h-4" />
               Total Balance
+              {isTestnet && (
+                <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-400/20 text-amber-200 uppercase">
+                  Testnet
+                </span>
+              )}
             </div>
             <div className="flex items-center gap-2">
               {wallet && (
@@ -135,7 +193,7 @@ export const OverviewPage = () => {
             ) : (
               <>
                 <span className="text-4xl lg:text-5xl font-bold tracking-tight text-white">
-                  ${usdcBalance.toFixed(2)}
+                  ${totalUsd.toFixed(2)}
                 </span>
                 <span className="text-white/50 text-lg">USD</span>
               </>
@@ -145,10 +203,12 @@ export const OverviewPage = () => {
             <div className="flex items-center gap-1.5 text-white/60 text-sm">
               <Coins className="w-4 h-4" />
               {solBalance.toFixed(4)} SOL
+              {prices && <span className="text-white/40">(${solUsd.toFixed(2)})</span>}
             </div>
             <div className="flex items-center gap-1.5 text-white/60 text-sm">
               <DollarSign className="w-4 h-4" />
               {usdcBalance.toFixed(2)} USDC
+              {prices && <span className="text-white/40">(${usdcUsd.toFixed(2)})</span>}
             </div>
           </div>
         </div>

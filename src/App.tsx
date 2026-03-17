@@ -18,6 +18,7 @@ import { ChatPage } from './pages/dashboard/ChatPage';
 import { CardsPage } from './pages/dashboard/CardsPage';
 import { PaymentsPage } from './pages/dashboard/PaymentsPage';
 import { SettingsPage } from './pages/dashboard/SettingsPage';
+import { WalletsPage } from './pages/dashboard/WalletsPage';
 import { CreateWalletPage } from './pages/dashboard/CreateWalletPage';
 import { useAuth } from './contexts/AuthContext';
 
@@ -116,6 +117,7 @@ export default function App() {
         }
       >
         <Route index element={<OverviewPage />} />
+        <Route path="wallets" element={<WalletsPage />} />
         <Route path="chat" element={<ChatPage />} />
         <Route path="cards" element={<CardsPage />} />
         <Route path="payments" element={<PaymentsPage />} />
