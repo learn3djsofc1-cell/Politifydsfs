@@ -37,18 +37,17 @@ export const ChatPage = () => {
             <h1 className="text-xl font-bold text-gray-900">Chat</h1>
             <button
               onClick={() => setShowConversation(true)}
-              aria-label="New conversation"
-              className="w-9 h-9 rounded-xl sf-icon-chip-purple flex items-center justify-center hover:opacity-80 transition-opacity"
+              className="w-9 h-9 rounded-xl bg-[#9945FF]/10 text-[#9945FF] flex items-center justify-center hover:bg-[#9945FF]/20 transition-colors"
             >
               <Plus className="w-5 h-5" />
             </button>
           </div>
-          <div className="relative group">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-[#9945FF] transition-colors" />
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
               type="text"
               placeholder="Search conversations..."
-              className="sf-input pl-10"
+              className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-10 pr-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-[#9945FF]/40 focus:ring-2 focus:ring-[#9945FF]/10 transition-all"
             />
           </div>
         </div>
@@ -63,7 +62,7 @@ export const ChatPage = () => {
           </p>
           <button
             onClick={() => setShowConversation(true)}
-            className="sf-btn-secondary"
+            className="px-4 py-2 rounded-xl bg-[#9945FF]/10 text-[#9945FF] text-sm font-medium hover:bg-[#9945FF]/20 transition-colors flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
             New Conversation
@@ -73,14 +72,13 @@ export const ChatPage = () => {
 
       <motion.div
         variants={item}
-        className={`flex-1 flex flex-col bg-[#F7F8FA] ${
+        className={`flex-1 flex flex-col bg-[#F4F5F7] ${
           !showConversation ? 'hidden lg:flex' : 'flex'
         }`}
       >
         <div className="lg:hidden flex items-center gap-3 p-4 border-b border-gray-200 bg-white">
           <button
             onClick={() => setShowConversation(false)}
-            aria-label="Back to conversations"
             className="w-9 h-9 rounded-xl bg-gray-100 text-gray-500 flex items-center justify-center hover:bg-gray-200 transition-colors"
           >
             <ChevronLeft className="w-5 h-5" />
@@ -89,7 +87,7 @@ export const ChatPage = () => {
         </div>
 
         <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">
-          <div className="w-20 h-20 rounded-3xl bg-gray-100 flex items-center justify-center mb-6">
+          <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-[#9945FF]/10 to-[#14F195]/10 flex items-center justify-center mb-6">
             <Users className="w-10 h-10 text-gray-400" />
           </div>
           <h2 className="text-xl font-bold text-gray-700 mb-2">Select a conversation</h2>
@@ -100,22 +98,22 @@ export const ChatPage = () => {
 
         <div className="border-t border-gray-200 p-4 bg-white">
           <div className="flex items-center gap-2">
-            <button aria-label="Attach payment" className="w-9 h-9 rounded-xl bg-gray-100 text-gray-400 flex items-center justify-center hover:bg-gray-200 hover:text-gray-600 transition-all duration-200 flex-shrink-0">
+            <button className="w-9 h-9 rounded-xl bg-gray-100 text-gray-500 flex items-center justify-center hover:bg-gray-200 transition-colors flex-shrink-0">
               <DollarSign className="w-5 h-5" />
             </button>
-            <button aria-label="Attach file" className="w-9 h-9 rounded-xl bg-gray-100 text-gray-400 flex items-center justify-center hover:bg-gray-200 hover:text-gray-600 transition-all duration-200 flex-shrink-0">
+            <button className="w-9 h-9 rounded-xl bg-gray-100 text-gray-500 flex items-center justify-center hover:bg-gray-200 transition-colors flex-shrink-0">
               <Paperclip className="w-5 h-5" />
             </button>
-            <div className="flex-1">
+            <div className="flex-1 relative">
               <input
                 type="text"
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder="Type a message..."
-                className="sf-input"
+                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-[#9945FF]/40 focus:ring-2 focus:ring-[#9945FF]/10 transition-all"
               />
             </div>
-            <button aria-label="Send message" className="w-9 h-9 rounded-xl bg-gradient-to-r from-[#9945FF] to-[#7B2FE0] text-white flex items-center justify-center hover:shadow-[0_4px_20px_-4px_rgba(153,69,255,0.4)] transition-all duration-300 flex-shrink-0">
+            <button className="w-9 h-9 rounded-xl bg-[#9945FF] text-white flex items-center justify-center hover:bg-[#8030E0] transition-colors flex-shrink-0">
               <Send className="w-4 h-4" />
             </button>
           </div>

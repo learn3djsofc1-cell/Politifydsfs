@@ -18,10 +18,10 @@ interface WalletInfo {
 }
 
 const quickActions = [
-  { icon: Send, label: 'Send', chipClass: 'sf-icon-chip-purple' },
-  { icon: Download, label: 'Receive', chipClass: 'sf-icon-chip-green' },
-  { icon: ArrowLeftRight, label: 'Swap', chipClass: 'sf-icon-chip-blue' },
-  { icon: DollarSign, label: 'Off-ramp', chipClass: 'sf-icon-chip-red' },
+  { icon: Send, label: 'Send', color: '#9945FF' },
+  { icon: Download, label: 'Receive', color: '#14F195' },
+  { icon: ArrowLeftRight, label: 'Swap', color: '#00C2FF' },
+  { icon: DollarSign, label: 'Off-ramp', color: '#FF6B6B' },
 ];
 
 const container = {
@@ -52,6 +52,7 @@ export const OverviewPage = () => {
         setWallet(data);
       }
     } catch {
+      // silent
     } finally {
       setLoadingWallet(false);
     }
@@ -89,21 +90,18 @@ export const OverviewPage = () => {
     >
       <motion.div variants={item} className="mb-8">
         <h1 className="text-2xl lg:text-3xl font-bold tracking-tight text-gray-900">Dashboard</h1>
-        <p className="text-gray-500 text-sm mt-1">Welcome to SendlyFi</p>
+        <p className="text-gray-600 text-sm mt-1">Welcome to SendlyFi</p>
       </motion.div>
 
       <motion.div
         variants={item}
-        className="relative overflow-hidden rounded-2xl p-6 lg:p-8 mb-8"
-        style={{
-          background: 'linear-gradient(135deg, #9945FF 0%, #7B2FE0 40%, #5A1DB5 100%)',
-        }}
+        className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#9945FF] to-[#7B2FE0] p-6 lg:p-8 mb-8"
       >
-        <div className="absolute top-0 right-0 w-80 h-80 bg-white rounded-full blur-[150px] opacity-[0.07] pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-60 h-60 bg-[#14F195] rounded-full blur-[120px] opacity-[0.12] pointer-events-none" />
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full blur-[120px] opacity-10 pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-[#14F195] rounded-full blur-[100px] opacity-15 pointer-events-none" />
 
         <div className="relative z-10">
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2 text-white/70 text-sm">
               <Wallet className="w-4 h-4" />
               Total Balance
@@ -112,8 +110,7 @@ export const OverviewPage = () => {
               {wallet && (
                 <button
                   onClick={handleCopyAddress}
-                  aria-label="Copy wallet address"
-                  className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 rounded-lg px-3 py-1.5 transition-all duration-200"
+                  className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-lg px-3 py-1.5 transition-colors"
                 >
                   <span className="text-white/80 text-xs font-mono">{truncatedAddress}</span>
                   {copied ? (
@@ -126,8 +123,7 @@ export const OverviewPage = () => {
               <button
                 onClick={handleRefresh}
                 disabled={refreshing}
-                aria-label="Refresh balance"
-                className="p-1.5 bg-white/10 hover:bg-white/20 rounded-lg transition-all duration-200"
+                className="p-1.5 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-lg transition-colors"
               >
                 <RefreshCw className={`w-4 h-4 text-white/70 ${refreshing ? 'animate-spin' : ''}`} />
               </button>
@@ -159,44 +155,43 @@ export const OverviewPage = () => {
       </motion.div>
 
       <motion.div variants={item} className="mb-8">
-        <h2 className="sf-section-title">Quick Actions</h2>
+        <h2 className="text-sm font-semibold text-gray-600 uppercase tracking-wider mb-4">Quick Actions</h2>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {quickActions.map((action) => (
             <button
               key={action.label}
-              className="sf-card flex flex-col items-center gap-3 p-5 hover:-translate-y-0.5 group cursor-pointer"
+              className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-white border border-gray-200 hover:border-gray-300 hover:shadow-sm transition-all group"
             >
-              <div className={`sf-icon-chip ${action.chipClass} group-hover:scale-110`}>
-                <action.icon className="w-5 h-5" />
+              <div
+                className="w-11 h-11 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110"
+                style={{ backgroundColor: `${action.color}15` }}
+              >
+                <action.icon className="w-5 h-5" style={{ color: action.color }} />
               </div>
-              <span className="text-xs font-medium text-gray-600 group-hover:text-gray-900 transition-colors">{action.label}</span>
+              <span className="text-xs font-medium text-gray-700">{action.label}</span>
             </button>
           ))}
         </div>
       </motion.div>
 
       <motion.div variants={item} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-        <div className="sf-card p-5">
+        <div className="rounded-2xl bg-white border border-gray-200 p-5">
           <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2 text-gray-500 text-sm">
-              <div className="sf-icon-chip sf-icon-chip-green" style={{ width: 24, height: 24, borderRadius: 8 }}>
-                <TrendingUp className="w-3.5 h-3.5" />
-              </div>
+            <div className="flex items-center gap-2 text-gray-600 text-sm">
+              <TrendingUp className="w-4 h-4 text-[#14F195]" />
               Income
             </div>
-            <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-md">This month</span>
+            <span className="text-xs text-gray-500">This month</span>
           </div>
           <span className="text-2xl font-bold text-gray-900">$0.00</span>
         </div>
-        <div className="sf-card p-5">
+        <div className="rounded-2xl bg-white border border-gray-200 p-5">
           <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2 text-gray-500 text-sm">
-              <div className="sf-icon-chip sf-icon-chip-red" style={{ width: 24, height: 24, borderRadius: 8 }}>
-                <ArrowUpRight className="w-3.5 h-3.5" />
-              </div>
+            <div className="flex items-center gap-2 text-gray-600 text-sm">
+              <ArrowUpRight className="w-4 h-4 text-[#FF6B6B]" />
               Spending
             </div>
-            <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-md">This month</span>
+            <span className="text-xs text-gray-500">This month</span>
           </div>
           <span className="text-2xl font-bold text-gray-900">$0.00</span>
         </div>
@@ -204,15 +199,15 @@ export const OverviewPage = () => {
 
       <motion.div variants={item}>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="sf-section-title mb-0">Recent Activity</h2>
+          <h2 className="text-sm font-semibold text-gray-600 uppercase tracking-wider">Recent Activity</h2>
         </div>
-        <div className="sf-card overflow-hidden">
+        <div className="rounded-2xl bg-white border border-gray-200 overflow-hidden">
           <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
             <div className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center mb-4">
               <Clock className="w-7 h-7 text-gray-400" />
             </div>
             <h3 className="text-gray-700 font-medium mb-1">No transactions yet</h3>
-            <p className="text-gray-400 text-sm max-w-xs">
+            <p className="text-gray-500 text-sm max-w-xs">
               Your recent activity will appear here once you start using SendlyFi.
             </p>
           </div>

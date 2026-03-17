@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { CreditCard, Plus, Shield, Zap, Globe, Wifi } from 'lucide-react';
+import { CreditCard, Plus, Shield, Zap, Globe } from 'lucide-react';
 
 const container = {
   hidden: { opacity: 0 },
@@ -13,9 +13,9 @@ const item = {
 };
 
 const features = [
-  { icon: Zap, label: 'Instant Issuance', desc: 'Get a card in seconds', chipClass: 'sf-icon-chip-purple' },
-  { icon: Shield, label: 'Secure', desc: 'Freeze or delete anytime', chipClass: 'sf-icon-chip-green' },
-  { icon: Globe, label: 'Global', desc: 'Accepted everywhere Visa is', chipClass: 'sf-icon-chip-blue' },
+  { icon: Zap, label: 'Instant Issuance', desc: 'Get a card in seconds' },
+  { icon: Shield, label: 'Secure', desc: 'Freeze or delete anytime' },
+  { icon: Globe, label: 'Global', desc: 'Accepted everywhere Visa is' },
 ];
 
 export const CardsPage = () => {
@@ -29,36 +29,27 @@ export const CardsPage = () => {
       <motion.div variants={item} className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl lg:text-3xl font-bold tracking-tight text-gray-900">Cards</h1>
-          <p className="text-gray-500 text-sm mt-1">Manage your virtual debit cards</p>
+          <p className="text-gray-600 text-sm mt-1">Manage your virtual debit cards</p>
         </div>
-        <button className="sf-btn-primary">
+        <button className="px-4 py-2.5 rounded-xl bg-[#9945FF] text-white text-sm font-medium hover:bg-[#8030E0] transition-colors flex items-center gap-2">
           <Plus className="w-4 h-4" />
           Create Card
         </button>
       </motion.div>
 
-      <motion.div variants={item} className="sf-card overflow-hidden mb-8">
+      <motion.div variants={item} className="rounded-2xl bg-white border border-gray-200 overflow-hidden mb-8">
         <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
-          <div className="relative mb-8">
-            <div className="rounded-2xl p-5 flex flex-col justify-between transform -rotate-3 shadow-[0_20px_50px_-12px_rgba(153,69,255,0.3)] border border-white/10 relative overflow-hidden"
-              style={{ background: 'linear-gradient(135deg, #9945FF 0%, #7B2FE0 50%, #5A1DB5 100%)', width: '224px', height: '136px' }}
-            >
-              <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/10 pointer-events-none" />
-              <div className="relative z-10 flex items-center justify-between">
-                <div className="w-10 h-7 rounded-md bg-gradient-to-br from-yellow-300 via-yellow-400 to-yellow-600 shadow-[0_2px_8px_rgba(234,179,8,0.3)] flex items-center justify-center">
-                  <div className="w-6 h-4 border border-yellow-600/30 rounded-sm" />
-                </div>
-                <Wifi className="w-5 h-5 text-white/40 rotate-90" />
+          <div className="relative mb-6">
+            <div className="w-48 h-28 rounded-xl bg-gradient-to-br from-[#9945FF] to-[#7B2FE0] border border-[#9945FF]/20 p-4 flex flex-col justify-between transform -rotate-3 shadow-lg">
+              <div className="flex items-center justify-between">
+                <div className="w-8 h-6 rounded bg-gradient-to-r from-yellow-400 to-yellow-500 opacity-80" />
+                <span className="text-[10px] text-white/60 font-mono">VISA</span>
               </div>
-              <div className="relative z-10">
-                <div className="text-[10px] text-white/40 font-mono tracking-[0.25em] mb-1">&bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull;</div>
-                <div className="flex items-center justify-between">
-                  <span className="text-[9px] text-white/30 font-mono">SENDLYFI</span>
-                  <span className="text-[10px] text-white/50 font-bold tracking-wider">VISA</span>
-                </div>
+              <div>
+                <div className="text-[10px] text-white/50 font-mono tracking-widest">•••• •••• •••• ••••</div>
               </div>
             </div>
-            <div className="absolute -top-3 -right-3 w-12 h-12 rounded-xl sf-icon-chip-purple flex items-center justify-center border border-gray-200 shadow-md bg-white">
+            <div className="absolute -top-2 -right-2 w-10 h-10 rounded-xl bg-[#9945FF]/10 flex items-center justify-center">
               <CreditCard className="w-5 h-5 text-[#9945FF]" />
             </div>
           </div>
@@ -66,7 +57,7 @@ export const CardsPage = () => {
           <p className="text-gray-500 text-sm max-w-sm mb-6">
             Create your first virtual debit card to start spending crypto anywhere Visa is accepted.
           </p>
-          <button className="sf-btn-primary">
+          <button className="px-6 py-3 rounded-xl bg-[#9945FF] text-white text-sm font-medium hover:bg-[#8030E0] transition-colors flex items-center gap-2">
             <Plus className="w-4 h-4" />
             Create Your First Card
           </button>
@@ -74,15 +65,15 @@ export const CardsPage = () => {
       </motion.div>
 
       <motion.div variants={item}>
-        <h2 className="sf-section-title">Card Features</h2>
+        <h2 className="text-sm font-semibold text-gray-600 uppercase tracking-wider mb-4">Card Features</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {features.map((f) => (
             <div
               key={f.label}
-              className="sf-card p-5 flex items-start gap-4 group"
+              className="rounded-2xl bg-white border border-gray-200 p-5 flex items-start gap-4"
             >
-              <div className={`sf-icon-chip ${f.chipClass} group-hover:scale-105`}>
-                <f.icon className="w-5 h-5" />
+              <div className="w-10 h-10 rounded-xl bg-[#9945FF]/10 flex items-center justify-center flex-shrink-0">
+                <f.icon className="w-5 h-5 text-[#9945FF]" />
               </div>
               <div>
                 <h3 className="font-medium text-gray-800 text-sm">{f.label}</h3>

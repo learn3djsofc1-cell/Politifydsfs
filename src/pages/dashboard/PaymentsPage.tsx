@@ -13,9 +13,9 @@ const item = {
 };
 
 const features = [
-  { icon: Clock, label: 'Flexible Scheduling', desc: 'Daily, weekly, monthly, or custom', chipClass: 'sf-icon-chip-purple' },
-  { icon: RefreshCw, label: 'Auto-retry', desc: 'Smart retry on failures', chipClass: 'sf-icon-chip-green' },
-  { icon: Bell, label: 'Notifications', desc: 'Alerts for every payment', chipClass: 'sf-icon-chip-blue' },
+  { icon: Clock, label: 'Flexible Scheduling', desc: 'Daily, weekly, monthly, or custom' },
+  { icon: RefreshCw, label: 'Auto-retry', desc: 'Smart retry on failures' },
+  { icon: Bell, label: 'Notifications', desc: 'Alerts for every payment' },
 ];
 
 export const PaymentsPage = () => {
@@ -29,24 +29,24 @@ export const PaymentsPage = () => {
       <motion.div variants={item} className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl lg:text-3xl font-bold tracking-tight text-gray-900">Payments</h1>
-          <p className="text-gray-500 text-sm mt-1">Scheduled and recurring payments</p>
+          <p className="text-gray-600 text-sm mt-1">Scheduled and recurring payments</p>
         </div>
-        <button className="sf-btn-primary">
+        <button className="px-4 py-2.5 rounded-xl bg-[#9945FF] text-white text-sm font-medium hover:bg-[#8030E0] transition-colors flex items-center gap-2">
           <Plus className="w-4 h-4" />
           Set Up Payment
         </button>
       </motion.div>
 
-      <motion.div variants={item} className="sf-card overflow-hidden mb-8">
+      <motion.div variants={item} className="rounded-2xl bg-white border border-gray-200 overflow-hidden mb-8">
         <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center mb-5">
-            <CalendarClock className="w-8 h-8 text-gray-400" />
+          <div className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center mb-4">
+            <CalendarClock className="w-7 h-7 text-gray-400" />
           </div>
           <h3 className="text-lg font-semibold text-gray-800 mb-2">No scheduled payments</h3>
           <p className="text-gray-500 text-sm max-w-sm mb-6">
             Set up recurring transfers, automatic bill splits, or payroll distributions to automate your finances.
           </p>
-          <button className="sf-btn-primary">
+          <button className="px-6 py-3 rounded-xl bg-[#9945FF] text-white text-sm font-medium hover:bg-[#8030E0] transition-colors flex items-center gap-2">
             <Plus className="w-4 h-4" />
             Set Up Your First Payment
           </button>
@@ -54,15 +54,15 @@ export const PaymentsPage = () => {
       </motion.div>
 
       <motion.div variants={item}>
-        <h2 className="sf-section-title">Payment Features</h2>
+        <h2 className="text-sm font-semibold text-gray-600 uppercase tracking-wider mb-4">Payment Features</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {features.map((f) => (
             <div
               key={f.label}
-              className="sf-card p-5 flex items-start gap-4 group"
+              className="rounded-2xl bg-white border border-gray-200 p-5 flex items-start gap-4"
             >
-              <div className={`sf-icon-chip ${f.chipClass} group-hover:scale-105`}>
-                <f.icon className="w-5 h-5" />
+              <div className="w-10 h-10 rounded-xl bg-[#14F195]/10 flex items-center justify-center flex-shrink-0">
+                <f.icon className="w-5 h-5 text-[#0DAA6D]" />
               </div>
               <div>
                 <h3 className="font-medium text-gray-800 text-sm">{f.label}</h3>
