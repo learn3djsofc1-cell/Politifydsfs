@@ -97,7 +97,7 @@ router.get('/conversations/:id/messages', requireAuth, async (req: AuthRequest, 
     const limit = Math.min(parseInt(req.query.limit as string) || 50, 100);
 
     let query: string;
-    let params: any[];
+    let params: (number | string)[];
 
     if (before) {
       query = `SELECT m.id, m.sender_id, m.content, m.message_type, m.transaction_id, m.created_at,

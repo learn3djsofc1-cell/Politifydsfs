@@ -268,14 +268,15 @@ router.post('/send', requireAuth, async (req: AuthRequest, res: Response) => {
         token,
         network: networkMode,
       });
-    } catch (txErr: any) {
+    } catch (txErr: unknown) {
       console.error('Transaction error:', txErr);
       await pool.query(
         "UPDATE transactions SET status = 'failed' WHERE id = $1",
         [transactionId]
       );
+      const errMessage = txErr instanceof Error ? txErr.message : 'Transaction failed';
       res.status(500).json({
-        error: txErr.message || 'Transaction failed',
+        error: errMessage,
         transactionId,
       });
     }
@@ -347,9 +348,10 @@ router.post('/airdrop', requireAuth, async (req: AuthRequest, res: Response) => 
     await connection.confirmTransaction(signature, 'confirmed');
 
     res.json({ signature, amount: 1, token: 'SOL' });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Airdrop error:', err);
-    res.status(500).json({ error: err.message || 'Airdrop failed' });
+    const errMessage = err instanceof Error ? err.message : 'Airdrop failed';
+    res.status(500).json({ error: errMessage });
   }
 });
 
