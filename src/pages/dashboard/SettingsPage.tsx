@@ -15,16 +15,16 @@ const item = {
   show: { opacity: 1, y: 0 },
 };
 
-const iconColors: Record<string, { color: string; gradient: string }> = {
-  User: { color: '#9945FF', gradient: 'from-[#9945FF]/15 to-[#7B2FE0]/10' },
-  Mail: { color: '#00C2FF', gradient: 'from-[#00C2FF]/15 to-[#0090B8]/10' },
-  Globe: { color: '#14F195', gradient: 'from-[#14F195]/15 to-[#0DAA6D]/10' },
-  Key: { color: '#9945FF', gradient: 'from-[#9945FF]/15 to-[#7B2FE0]/10' },
-  Smartphone: { color: '#FF6B6B', gradient: 'from-[#FF6B6B]/15 to-[#E04545]/10' },
-  Lock: { color: '#00C2FF', gradient: 'from-[#00C2FF]/15 to-[#0090B8]/10' },
-  Bell: { color: '#14F195', gradient: 'from-[#14F195]/15 to-[#0DAA6D]/10' },
-  Palette: { color: '#9945FF', gradient: 'from-[#9945FF]/15 to-[#7B2FE0]/10' },
-  Shield: { color: '#FF6B6B', gradient: 'from-[#FF6B6B]/15 to-[#E04545]/10' },
+const iconConfig: Record<string, { chipClass: string }> = {
+  User: { chipClass: 'sf-icon-chip-purple' },
+  Mail: { chipClass: 'sf-icon-chip-blue' },
+  Globe: { chipClass: 'sf-icon-chip-green' },
+  Key: { chipClass: 'sf-icon-chip-purple' },
+  Smartphone: { chipClass: 'sf-icon-chip-red' },
+  Lock: { chipClass: 'sf-icon-chip-blue' },
+  Bell: { chipClass: 'sf-icon-chip-green' },
+  Palette: { chipClass: 'sf-icon-chip-purple' },
+  Shield: { chipClass: 'sf-icon-chip-red' },
 };
 
 const SettingRow = ({ icon: Icon, iconName, label, desc, action }: {
@@ -34,17 +34,17 @@ const SettingRow = ({ icon: Icon, iconName, label, desc, action }: {
   desc: string;
   action?: React.ReactNode;
 }) => {
-  const style = iconColors[iconName] || iconColors.User;
+  const config = iconConfig[iconName] || iconConfig.User;
   return (
-    <div className="flex items-center gap-4 px-5 py-4 hover:bg-white/[0.03] transition-all duration-200 group cursor-pointer">
-      <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${style.gradient} flex items-center justify-center flex-shrink-0 border border-white/[0.06] group-hover:scale-105 transition-transform duration-200`}>
-        <Icon className="w-5 h-5" style={{ color: style.color }} />
+    <div className="flex items-center gap-4 px-5 py-4 hover:bg-gray-50 transition-all duration-200 group cursor-pointer">
+      <div className={`sf-icon-chip ${config.chipClass} group-hover:scale-105`}>
+        <Icon className="w-5 h-5" />
       </div>
       <div className="flex-1 min-w-0">
-        <div className="text-sm font-medium text-white/80">{label}</div>
-        <div className="text-xs text-white/35 mt-0.5">{desc}</div>
+        <div className="text-sm font-medium text-gray-800">{label}</div>
+        <div className="text-xs text-gray-500 mt-0.5">{desc}</div>
       </div>
-      {action || <ChevronRight className="w-4 h-4 text-white/20 flex-shrink-0 group-hover:text-white/40 group-hover:translate-x-0.5 transition-all duration-200" />}
+      {action || <ChevronRight className="w-4 h-4 text-gray-300 flex-shrink-0 group-hover:text-gray-500 group-hover:translate-x-0.5 transition-all duration-200" />}
     </div>
   );
 };
@@ -55,15 +55,9 @@ const Toggle = ({ enabled, label }: { enabled: boolean; label: string }) => (
     role="switch"
     aria-checked={enabled}
     aria-label={label}
-    className={`w-11 h-6 rounded-full flex items-center transition-all duration-300 cursor-pointer ${
-      enabled
-        ? 'bg-gradient-to-r from-[#9945FF] to-[#7B2FE0] shadow-[0_0_12px_-2px_rgba(153,69,255,0.4)]'
-        : 'bg-white/10'
-    }`}
+    className={`sf-toggle ${enabled ? 'sf-toggle-on' : 'sf-toggle-off'}`}
   >
-    <div className={`w-5 h-5 rounded-full bg-white shadow-md transition-all duration-300 mx-0.5 ${
-      enabled ? 'translate-x-5' : ''
-    }`} />
+    <div className={`sf-toggle-knob ${enabled ? 'sf-toggle-knob-on' : ''}`} />
   </button>
 );
 
@@ -76,28 +70,28 @@ export const SettingsPage = () => {
       className="p-4 lg:p-8 max-w-[800px] mx-auto"
     >
       <motion.div variants={item} className="mb-8">
-        <h1 className="text-2xl lg:text-3xl font-bold tracking-tight text-white">Settings</h1>
-        <p className="text-white/40 text-sm mt-1">Manage your account preferences</p>
+        <h1 className="text-2xl lg:text-3xl font-bold tracking-tight text-gray-900">Settings</h1>
+        <p className="text-gray-500 text-sm mt-1">Manage your account preferences</p>
       </motion.div>
 
       <motion.div variants={item} className="mb-6">
-        <div className="rounded-2xl bg-white/[0.04] border border-white/[0.06] p-6 flex items-center gap-5 hover:bg-white/[0.05] transition-all duration-200">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#9945FF]/15 to-[#14F195]/15 flex items-center justify-center flex-shrink-0 border border-white/[0.08] shadow-[0_4px_20px_-4px_rgba(153,69,255,0.2)]">
-            <User className="w-8 h-8 text-white/40" />
+        <div className="sf-card p-6 flex items-center gap-5">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#9945FF]/10 to-[#14F195]/10 flex items-center justify-center flex-shrink-0 border border-gray-200">
+            <User className="w-8 h-8 text-gray-400" />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="text-lg font-semibold text-white/80">No Name Set</div>
-            <div className="text-sm text-white/35 mt-0.5">No wallet connected</div>
+            <div className="text-lg font-semibold text-gray-800">No Name Set</div>
+            <div className="text-sm text-gray-500 mt-0.5">No wallet connected</div>
           </div>
-          <button className="px-4 py-2 rounded-xl bg-white/[0.06] border border-white/[0.08] text-white/60 text-sm font-medium hover:bg-white/[0.1] hover:text-white/80 transition-all duration-200 flex-shrink-0">
+          <button className="sf-btn-secondary flex-shrink-0">
             Edit Profile
           </button>
         </div>
       </motion.div>
 
       <motion.div variants={item} className="mb-6">
-        <h2 className="text-xs font-semibold text-white/30 uppercase tracking-wider mb-3 px-1">Profile</h2>
-        <div className="rounded-2xl bg-white/[0.04] border border-white/[0.06] divide-y divide-white/[0.04] overflow-hidden">
+        <h2 className="sf-section-title">Profile</h2>
+        <div className="sf-card-flat divide-y divide-gray-100 overflow-hidden">
           <SettingRow icon={User} iconName="User" label="Display Name" desc="Set your public display name" />
           <SettingRow icon={Mail} iconName="Mail" label="Email" desc="Add an email for notifications" />
           <SettingRow icon={Globe} iconName="Globe" label="Language" desc="English" />
@@ -105,8 +99,8 @@ export const SettingsPage = () => {
       </motion.div>
 
       <motion.div variants={item} className="mb-6">
-        <h2 className="text-xs font-semibold text-white/30 uppercase tracking-wider mb-3 px-1">Security</h2>
-        <div className="rounded-2xl bg-white/[0.04] border border-white/[0.06] divide-y divide-white/[0.04] overflow-hidden">
+        <h2 className="sf-section-title">Security</h2>
+        <div className="sf-card-flat divide-y divide-gray-100 overflow-hidden">
           <SettingRow icon={Key} iconName="Key" label="Wallet" desc="Connect or manage your Solana wallet" />
           <SettingRow icon={Smartphone} iconName="Smartphone" label="Two-Factor Auth" desc="Not enabled" />
           <SettingRow icon={Lock} iconName="Lock" label="Biometric Login" desc="Use Face ID or fingerprint" action={<Toggle enabled={false} label="Toggle biometric login" />} />
@@ -114,10 +108,10 @@ export const SettingsPage = () => {
       </motion.div>
 
       <motion.div variants={item} className="mb-6">
-        <h2 className="text-xs font-semibold text-white/30 uppercase tracking-wider mb-3 px-1">Preferences</h2>
-        <div className="rounded-2xl bg-white/[0.04] border border-white/[0.06] divide-y divide-white/[0.04] overflow-hidden">
+        <h2 className="sf-section-title">Preferences</h2>
+        <div className="sf-card-flat divide-y divide-gray-100 overflow-hidden">
           <SettingRow icon={Bell} iconName="Bell" label="Notifications" desc="Push and email notifications" action={<Toggle enabled={true} label="Toggle notifications" />} />
-          <SettingRow icon={Palette} iconName="Palette" label="Theme" desc="Dark" />
+          <SettingRow icon={Palette} iconName="Palette" label="Theme" desc="Light" />
           <SettingRow icon={Shield} iconName="Shield" label="Privacy" desc="Manage data and privacy settings" />
         </div>
       </motion.div>

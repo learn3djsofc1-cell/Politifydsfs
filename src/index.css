@@ -20,6 +20,242 @@
   .animate-shimmer {
     animation: shimmer 2.5s linear infinite;
   }
+
+  .sf-page {
+    background-color: #F7F8FA;
+    min-height: 100vh;
+  }
+
+  .sf-card {
+    background-color: #ffffff;
+    border: 1px solid #E5E7EB;
+    border-radius: 1rem;
+    box-shadow: 0 1px 3px 0 rgba(0,0,0,0.04), 0 1px 2px -1px rgba(0,0,0,0.03);
+    transition: all 0.2s ease;
+  }
+  .sf-card:hover {
+    box-shadow: 0 4px 12px -2px rgba(0,0,0,0.06), 0 2px 6px -2px rgba(0,0,0,0.04);
+  }
+
+  .sf-card-flat {
+    background-color: #ffffff;
+    border: 1px solid #E5E7EB;
+    border-radius: 1rem;
+    transition: all 0.2s ease;
+  }
+
+  .sf-btn-primary {
+    background: linear-gradient(135deg, #9945FF 0%, #7B2FE0 100%);
+    color: #ffffff;
+    font-weight: 600;
+    border-radius: 0.75rem;
+    padding: 0.75rem 1.5rem;
+    font-size: 0.875rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    border: none;
+    position: relative;
+    overflow: hidden;
+  }
+  .sf-btn-primary:hover {
+    box-shadow: 0 4px 20px -4px rgba(153, 69, 255, 0.4);
+    transform: translateY(-1px);
+  }
+  .sf-btn-primary:active {
+    transform: scale(0.98) translateY(0);
+  }
+  .sf-btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+  }
+
+  .sf-btn-secondary {
+    background-color: #F3F4F6;
+    color: #374151;
+    font-weight: 500;
+    border-radius: 0.75rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    border: 1px solid #E5E7EB;
+  }
+  .sf-btn-secondary:hover {
+    background-color: #E5E7EB;
+    color: #111827;
+  }
+
+  .sf-btn-ghost {
+    background: transparent;
+    color: #6B7280;
+    font-weight: 500;
+    border-radius: 0.75rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    border: none;
+  }
+  .sf-btn-ghost:hover {
+    background-color: #F3F4F6;
+    color: #111827;
+  }
+
+  .sf-input {
+    width: 100%;
+    background-color: #F9FAFB;
+    border: 1px solid #E5E7EB;
+    border-radius: 0.75rem;
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    color: #111827;
+    transition: all 0.2s ease;
+    outline: none;
+  }
+  .sf-input::placeholder {
+    color: #9CA3AF;
+  }
+  .sf-input:focus {
+    border-color: #9945FF;
+    box-shadow: 0 0 0 3px rgba(153, 69, 255, 0.1);
+    background-color: #ffffff;
+  }
+
+  .sf-icon-chip {
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
+  }
+  .sf-icon-chip-purple {
+    background-color: rgba(153, 69, 255, 0.1);
+    color: #9945FF;
+  }
+  .sf-icon-chip-green {
+    background-color: rgba(20, 241, 149, 0.12);
+    color: #0DAA6D;
+  }
+  .sf-icon-chip-blue {
+    background-color: rgba(0, 194, 255, 0.1);
+    color: #0090B8;
+  }
+  .sf-icon-chip-red {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: #EF4444;
+  }
+
+  .sf-section-title {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #9CA3AF;
+    margin-bottom: 1rem;
+    padding-left: 0.25rem;
+  }
+
+  .sf-toggle {
+    width: 2.75rem;
+    height: 1.5rem;
+    border-radius: 9999px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+    padding: 0;
+  }
+  .sf-toggle-on {
+    background: linear-gradient(135deg, #9945FF 0%, #7B2FE0 100%);
+  }
+  .sf-toggle-off {
+    background-color: #D1D5DB;
+  }
+  .sf-toggle-knob {
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 9999px;
+    background-color: #ffffff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    transition: all 0.3s ease;
+    margin: 0 0.125rem;
+  }
+  .sf-toggle-knob-on {
+    transform: translateX(1.25rem);
+  }
+
+  .sf-auth-bg {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #F7F8FA 0%, #EDE9FE 50%, #F0FDF4 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .sf-auth-card {
+    background-color: #ffffff;
+    border: 1px solid #E5E7EB;
+    border-radius: 1.25rem;
+    padding: 2rem;
+    box-shadow: 0 4px 24px -4px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.02);
+  }
+
+  .sf-sidebar {
+    background-color: #0F1225;
+    color: #ffffff;
+  }
+
+  .sf-sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-radius: 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    position: relative;
+    color: rgba(255,255,255,0.45);
+  }
+  .sf-sidebar-item:hover {
+    color: rgba(255,255,255,0.7);
+    background-color: rgba(255,255,255,0.06);
+  }
+  .sf-sidebar-item-active {
+    color: #ffffff;
+    background: linear-gradient(90deg, rgba(20,241,149,0.15) 0%, transparent 100%);
+  }
+  .sf-sidebar-indicator {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 1.25rem;
+    border-radius: 0 9999px 9999px 0;
+    background: linear-gradient(180deg, #14F195 0%, #0DAA6D 100%);
+  }
 }
 
 @keyframes twinkle {
