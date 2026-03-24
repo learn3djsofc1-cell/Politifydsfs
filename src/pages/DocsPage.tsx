@@ -156,7 +156,7 @@ export const DocsPage = () => {
             </DocParagraph>
             <DocSubheading>2. Create a Wallet</DocSubheading>
             <DocParagraph>
-              After signing up, you will be prompted to create a Solana wallet. SendlyFi generates a new keypair for you, with the private key encrypted using AES-256-GCM before being stored. Your public key is your wallet address. You can also import this wallet into Phantom or other Solana wallets using the private key shown during creation.
+              After signing up, you will be prompted to create a Solana wallet. SendlyFi generates a new keypair for you, with the private key encrypted using your password via PBKDF2 + AES-256-GCM before being stored. Your public key is your wallet address. You can also import this wallet into Phantom or other Solana wallets using the private key shown during creation.
             </DocParagraph>
             <DocSubheading>3. Fund Your Wallet</DocSubheading>
             <DocParagraph>
@@ -236,9 +236,8 @@ export const DocsPage = () => {
             ]} />
             <DocSubheading>Encryption</DocSubheading>
             <DocList items={[
-              'Wallet private keys are encrypted with AES-256-GCM before database storage',
-              'Virtual card details (number, CVV, expiry) are encrypted with AES-256-GCM',
-              'Encryption key is derived from a server-side JWT_SECRET (persisted to disk)',
+              'Wallet private keys are encrypted with AES-256-GCM using a password-derived key (PBKDF2 with 100,000 iterations and SHA-256), meaning only the user\'s password can decrypt their private key',
+              'Virtual card details (number, CVV, expiry) are encrypted with AES-256-GCM using a server-side encryption key (CARD_ENCRYPTION_KEY or JWT_SECRET fallback)',
               'All API communication uses HTTPS',
             ]} />
             <DocSubheading>Data Handling</DocSubheading>
