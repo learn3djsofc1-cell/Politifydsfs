@@ -225,7 +225,7 @@ export const DocsPage = () => {
           <section id="privacy" className="mb-20 scroll-mt-24">
             <SectionHeader icon={Shield} title="Privacy & Security" subtitle="How SendlyFi protects your account and wallet data." />
             <DocParagraph>
-              SendlyFi is designed with security at every layer. User passwords are hashed with bcrypt before storage. Session tokens are signed with JWT and validated on every API request. Wallet private keys and card details are encrypted with AES-256-GCM using a server-side secret key.
+              SendlyFi is designed with security at every layer. User passwords are hashed with bcrypt before storage. Session tokens are signed with JWT and validated on every API request. Wallet private keys are encrypted with AES-256-GCM using a password-derived key (PBKDF2), while virtual card details are encrypted with AES-256-GCM using a server-side secret key.
             </DocParagraph>
             <DocSubheading>Authentication</DocSubheading>
             <DocList items={[
