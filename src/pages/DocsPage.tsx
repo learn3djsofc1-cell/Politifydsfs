@@ -282,20 +282,20 @@ export const DocsPage = () => {
           <section id="dashboard" className="mb-20 scroll-mt-24">
             <SectionHeader icon={BarChart3} title="Dashboard" subtitle="Wallet overview, balances, and account management." />
             <DocParagraph>
-              The SendlyFi dashboard provides a complete view of your wallet and account. It is a responsive layout with a sidebar on desktop and bottom navigation tabs on mobile.
+              The SendlyFi dashboard provides a complete view of your wallet and account. On desktop, it features a fixed sidebar with all navigation items and a network selector at the bottom. On mobile, it uses a top bar with a hamburger menu (slide-out drawer) and a fixed bottom tab bar showing the four most-used pages (Overview, Chat, Cards, Settings).
             </DocParagraph>
             <DocSubheading>Dashboard Pages</DocSubheading>
             <DocList items={[
               'Overview: Live wallet balance (SOL and USDC) fetched from Solana RPC, USD conversion via CoinGecko prices, public key display, network badge, quick action buttons, auto-refresh every 30 seconds',
               'Wallets: Full wallet address, per-token balances with USD conversion, copy address, link to Solana Explorer, network badge (Devnet or Mainnet)',
-              'Chat: User search, conversation list with last message preview, real-time messaging, AI-powered payment initiation',
-              'Cards: Virtual card management with animated SVG cards, card detail reveal, freeze/unfreeze, delete (mainnet only)',
-              'Payments: Scheduled payments interface (coming soon)',
+              'Chat: User search, conversation list with last message preview, real-time messaging with 4-second polling, AI-powered payment initiation',
+              'Cards: Virtual card management with animated SVG Visa and Mastercard cards, card detail reveal, freeze/unfreeze, delete (mainnet only)',
+              'Network: Dedicated page for switching between Devnet and Mainnet',
               'Settings: Profile information, security settings, and preferences',
             ]} />
-            <DocSubheading>Network Toggle</DocSubheading>
+            <DocSubheading>Network Selector</DocSubheading>
             <DocParagraph>
-              The dashboard sidebar includes a toggle to switch between Devnet and Mainnet. Devnet uses simulated balances stored in the database. Mainnet queries live balances from the Solana blockchain via Helius RPC. The current network mode is persisted per user and displayed throughout the interface.
+              The network can be switched from the dedicated Network page or via the network selector in the sidebar (desktop) and top bar (mobile). Devnet uses simulated balances stored in the database. Mainnet queries live balances from the Solana blockchain via Helius RPC. The current network mode is persisted per user and displayed as a badge throughout the interface.
             </DocParagraph>
           </section>
 
