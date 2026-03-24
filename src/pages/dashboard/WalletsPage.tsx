@@ -214,7 +214,7 @@ export const WalletsPage = () => {
 
         <div className="bg-gray-50 rounded-xl p-4 mb-4">
           <span className="text-xs text-gray-500 block mb-1">Wallet Address</span>
-          <span className="font-mono text-sm text-gray-800 break-all">{wallet?.publicKey || '—'}</span>
+          <span className="font-mono text-sm text-gray-800 break-all">{wallet?.publicKey || '-'}</span>
         </div>
 
         <div className="text-center py-4">
@@ -279,7 +279,7 @@ export const WalletsPage = () => {
           <div className="flex items-center justify-between text-sm">
             <span className="text-gray-500">Created</span>
             <span className="text-gray-900 font-medium">
-              {wallet?.createdAt ? new Date(wallet.createdAt).toLocaleDateString() : '—'}
+              {wallet?.createdAt ? new Date(wallet.createdAt).toLocaleDateString() : '-'}
             </span>
           </div>
         </div>

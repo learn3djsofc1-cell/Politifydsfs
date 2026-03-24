@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import pool from './db.js';
 
-const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(32).toString('hex');
+export const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(32).toString('hex');
 const JWT_EXPIRES_IN = '7d';
 const SALT_ROUNDS = 12;
 

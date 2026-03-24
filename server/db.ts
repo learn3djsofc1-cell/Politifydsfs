@@ -136,6 +136,8 @@ export async function initDatabase() {
         user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
         card_type VARCHAR(20) NOT NULL CHECK (card_type IN ('visa', 'mastercard')),
         card_number_last4 VARCHAR(4) NOT NULL,
+        card_number_encrypted TEXT NOT NULL DEFAULT '',
+        cvv_encrypted TEXT NOT NULL DEFAULT '',
         cardholder_name VARCHAR(50) NOT NULL,
         expiry_month INTEGER NOT NULL CHECK (expiry_month BETWEEN 1 AND 12),
         expiry_year INTEGER NOT NULL,
@@ -145,6 +147,18 @@ export async function initDatabase() {
         created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
         CONSTRAINT idx_cards_user_type UNIQUE (user_id, card_type)
       )
+    `);
+
+    await client.query(`
+      DO $$ BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name = 'cards' AND column_name = 'card_number_encrypted'
+        ) THEN
+          ALTER TABLE cards ADD COLUMN card_number_encrypted TEXT NOT NULL DEFAULT '';
+          ALTER TABLE cards ADD COLUMN cvv_encrypted TEXT NOT NULL DEFAULT '';
+        END IF;
+      END $$;
     `);
 
     await client.query(`

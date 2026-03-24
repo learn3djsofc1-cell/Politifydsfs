@@ -154,7 +154,7 @@ export const NetworkPage = () => {
             <div>
               <h2 className="text-white font-semibold text-lg">SendlyFi Network</h2>
               <p className="text-white/60 text-sm">
-                Aggregated platform statistics — privacy-first, numbers only
+                Aggregated platform statistics - privacy-first, numbers only
               </p>
             </div>
           </div>

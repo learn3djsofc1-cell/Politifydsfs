@@ -559,7 +559,7 @@ export const ChatPage = () => {
             </div>
             <h2 className="text-xl font-bold text-gray-700 mb-2">Select a conversation</h2>
             <p className="text-gray-500 text-sm max-w-sm">
-              Choose a contact from the sidebar or start a new conversation. Type naturally to send payments — e.g. "send 10 USDC" or "transfer 0.5 SOL".
+              Choose a contact from the sidebar or start a new conversation. Type naturally to send payments, e.g. "send 10 USDC" or "transfer 0.5 SOL".
             </p>
           </div>
         ) : (
@@ -617,7 +617,7 @@ export const ChatPage = () => {
                         </div>
                         <div className="flex items-baseline gap-2 mb-2">
                           <span className={`text-2xl font-bold ${isMe ? 'text-white' : 'text-gray-900'}`}>
-                            {msg.amount ? parseFloat(msg.amount).toFixed(msg.token === 'SOL' ? 4 : 2) : '—'}
+                            {msg.amount ? parseFloat(msg.amount).toFixed(msg.token === 'SOL' ? 4 : 2) : '-'}
                           </span>
                           <span className={`text-sm font-medium ${isMe ? 'text-white/60' : 'text-gray-500'}`}>
                             {msg.token || ''}
