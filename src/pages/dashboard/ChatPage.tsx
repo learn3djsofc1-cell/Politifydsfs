@@ -94,6 +94,9 @@ export const ChatPage = () => {
       if (res.ok) {
         const data = await res.json();
         setConversations(data);
+      } else {
+        console.error('Failed to fetch conversations, status:', res.status);
+        setChatError('Failed to load conversations.');
       }
     } catch (err) {
       console.error('Failed to fetch conversations:', err);
@@ -112,6 +115,9 @@ export const ChatPage = () => {
       if (res.ok) {
         const data = await res.json();
         setMessages(data);
+      } else {
+        console.error('Failed to fetch messages, status:', res.status);
+        setChatError('Failed to load messages.');
       }
     } catch (err) {
       console.error('Failed to fetch messages:', err);
@@ -258,6 +264,7 @@ export const ChatPage = () => {
     setMessageText('');
     setParsingIntent(true);
 
+    let aiParseFailed = false;
     try {
       const intentRes = await fetch('/api/chat/parse-intent', {
         method: 'POST',
@@ -292,11 +299,18 @@ export const ChatPage = () => {
           setMessageText(text);
           return;
         }
+      } else {
+        console.error('AI intent parsing returned non-OK status:', intentRes.status);
+        aiParseFailed = true;
       }
     } catch (err) {
       console.error('AI intent parsing failed, sending as text:', err);
+      aiParseFailed = true;
     }
 
+    if (aiParseFailed) {
+      setChatError('AI payment detection unavailable. Sending as text message.');
+    }
     setParsingIntent(false);
     await sendTextMessage(text);
   };
