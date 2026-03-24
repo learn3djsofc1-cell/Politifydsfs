@@ -167,7 +167,7 @@ function AnimatedCardSVG({
 
         <text x="32" y="145" fill="white" opacity="0.9" fontFamily="monospace" fontSize="18" letterSpacing="3">
           {showDetails && details
-            ? formatCardNumber(details.cardNumber)
+            ? formatCardNumber(details.cardNumber || `************${last4}`)
             : `**** **** **** ${last4}`}
         </text>
 
@@ -191,7 +191,7 @@ function AnimatedCardSVG({
               CVV
             </text>
             <text x="300" y="200" fill="white" opacity="0.85" fontFamily="monospace" fontSize="12">
-              {details.cvv}
+              {details.cvv || '***'}
             </text>
           </>
         )}
@@ -216,6 +216,18 @@ function AnimatedCardSVG({
           </g>
         )}
       </svg>
+
+      <AnimatePresence>
+        {showDetails && details && (
+          <motion.div
+            initial={{ opacity: 0.6 }}
+            animate={{ opacity: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+            className="absolute inset-0 bg-white/10 rounded-2xl pointer-events-none"
+          />
+        )}
+      </AnimatePresence>
 
       {isFrozen && (
         <motion.div
