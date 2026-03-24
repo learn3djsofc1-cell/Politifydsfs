@@ -182,7 +182,7 @@ function AnimatedCardSVG({
           EXPIRES
         </text>
         <text x="220" y="200" fill="white" opacity="0.85" fontFamily="monospace" fontSize="12">
-          {formatExpiry(expiryMonth, expiryYear)}
+          {showDetails && details ? formatExpiry(expiryMonth, expiryYear) : '**/**'}
         </text>
 
         {showDetails && details && (

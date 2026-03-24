@@ -143,7 +143,7 @@ router.get('/', requireAuth, async (req: AuthRequest, res: Response) => {
     const networkMode = userResult.rows[0]?.network_mode || 'devnet';
 
     let balances = { sol: 0, usdc: 0 };
-    if (networkMode === 'mainnet-beta' && result.rows.length > 0) {
+    if (networkMode === 'mainnet-beta') {
       const walletResult = await pool.query(
         'SELECT public_key FROM wallets WHERE user_id = $1',
         [userId]
