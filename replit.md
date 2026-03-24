@@ -41,7 +41,7 @@ A React + TypeScript landing page and dashboard app for **SendlyFi**, a crypto-t
 - **3D**: Three.js, @react-three/fiber, @react-three/drei
 - **Animations**: Motion (Framer Motion)
 - **Icons**: Lucide React
-- **AI**: @google/genai (Gemini API) - production-grade NLP payment intent parser supporting multi-token commands, @username recipient extraction, "send all/balance" keywords, English and Indonesian phrasings
+- **AI**: @google/genai (Gemini API via Replit AI Integrations) - production-grade NLP payment intent parser supporting multi-token commands, @username recipient extraction, "send all/balance" keywords, English-only parsing
 - **Auth**: bcryptjs (password hashing), jsonwebtoken (JWT sessions)
 - **Solana**: @solana/web3.js (keypair generation, RPC queries), bs58 (base58 encoding)
 - **Database**: pg (PostgreSQL client)

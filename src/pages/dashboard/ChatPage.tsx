@@ -80,6 +80,7 @@ export const ChatPage = () => {
   const [paymentError, setPaymentError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [parsingIntent, setParsingIntent] = useState(false);
+  const [chatError, setChatError] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const pollRef = useRef<NodeJS.Timeout | null>(null);
@@ -94,7 +95,10 @@ export const ChatPage = () => {
         const data = await res.json();
         setConversations(data);
       }
-    } catch { /* silent */ } finally {
+    } catch (err) {
+      console.error('Failed to fetch conversations:', err);
+      setChatError('Failed to load conversations. Check your connection.');
+    } finally {
       setLoadingConversations(false);
     }
   }, [token]);
@@ -109,7 +113,10 @@ export const ChatPage = () => {
         const data = await res.json();
         setMessages(data);
       }
-    } catch { /* silent */ }
+    } catch (err) {
+      console.error('Failed to fetch messages:', err);
+      setChatError('Failed to load messages. Check your connection.');
+    }
   }, [token]);
 
   useEffect(() => {
@@ -155,7 +162,9 @@ export const ChatPage = () => {
           const data = await res.json();
           setSearchResults(data.users || data);
         }
-      } catch { /* silent */ } finally {
+      } catch (err) {
+        console.error('User search failed:', err);
+      } finally {
         setSearching(false);
       }
     }, 300);
@@ -190,13 +199,32 @@ export const ChatPage = () => {
         setSearchQuery('');
         setSearchResults([]);
         await fetchConversations();
+      } else {
+        const errData = await res.json().catch(() => null);
+        setChatError(errData?.error || 'Failed to start conversation.');
       }
-    } catch { /* silent */ }
+    } catch (err) {
+      console.error('Failed to start conversation:', err);
+      setChatError('Failed to start conversation. Please try again.');
+    }
   };
 
   const sendTextMessage = async (text: string) => {
-    if (!token || !activeConversation) return;
+    if (!token || !activeConversation || !user) return;
+    setChatError('');
     setSendingMessage(true);
+
+    const optimisticMsg: Message = {
+      id: -(Date.now()),
+      sender_id: user.id,
+      content: text,
+      message_type: 'text',
+      transaction_id: null,
+      created_at: new Date().toISOString(),
+      sender_username: user.username,
+    };
+    setMessages(prev => [...prev, optimisticMsg]);
+
     try {
       const res = await fetch(`/api/chat/conversations/${activeConversation.id}/messages`, {
         method: 'POST',
@@ -209,8 +237,17 @@ export const ChatPage = () => {
       if (res.ok) {
         await fetchMessages(activeConversation.id);
         await fetchConversations();
+      } else {
+        const errData = await res.json().catch(() => null);
+        const errMsg = errData?.error || 'Failed to send message';
+        setChatError(errMsg);
+        setMessages(prev => prev.filter(m => m.id !== optimisticMsg.id));
       }
-    } catch { /* silent */ } finally {
+    } catch (err) {
+      console.error('Send message failed:', err);
+      setChatError('Network error. Message not sent.');
+      setMessages(prev => prev.filter(m => m.id !== optimisticMsg.id));
+    } finally {
       setSendingMessage(false);
     }
   };
@@ -256,8 +293,8 @@ export const ChatPage = () => {
           return;
         }
       }
-    } catch {
-      /* AI parsing failed, send as normal text */
+    } catch (err) {
+      console.error('AI intent parsing failed, sending as text:', err);
     }
 
     setParsingIntent(false);
@@ -843,12 +880,21 @@ export const ChatPage = () => {
             </div>
 
             <div className="border-t border-gray-200 p-4 bg-white">
+              {chatError && (
+                <div className="mb-2 flex items-center gap-2 px-3 py-2 rounded-lg bg-red-50 border border-red-200">
+                  <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0" />
+                  <span className="text-xs text-red-600 flex-1">{chatError}</span>
+                  <button onClick={() => setChatError('')} className="text-red-400 hover:text-red-600">
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              )}
               <div className="flex items-center gap-2">
                 <div className="flex-1 relative">
                   <input
                     type="text"
                     value={messageText}
-                    onChange={(e) => setMessageText(e.target.value)}
+                    onChange={(e) => { setMessageText(e.target.value); if (chatError) setChatError(''); }}
                     onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
                     placeholder='Type a message or "send 10 USDC"...'
                     disabled={parsingIntent}

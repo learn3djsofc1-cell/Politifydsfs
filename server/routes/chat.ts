@@ -6,10 +6,10 @@ import { requireAuth, AuthRequest } from '../middleware.js';
 const router = Router();
 
 const ai = new GoogleGenAI({
-  apiKey: process.env.AI_INTEGRATIONS_GEMINI_API_KEY || '',
+  apiKey: process.env.AI_INTEGRATIONS_GEMINI_API_KEY,
   httpOptions: {
     apiVersion: '',
-    baseUrl: process.env.AI_INTEGRATIONS_GEMINI_BASE_URL || '',
+    baseUrl: process.env.AI_INTEGRATIONS_GEMINI_BASE_URL,
   },
 });
 
