@@ -2,25 +2,21 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Logo } from '../components/Logo';
 import {
-  BookOpen, MessageSquare, Shield, CreditCard, ArrowLeftRight,
-  Users, Bot, Clock, BarChart3, FileText, ChevronRight,
-  Rocket, Menu, X, Play, Code
+  BookOpen, MessageSquare, Shield, CreditCard,
+  Bot, Clock, BarChart3, ChevronRight,
+  Rocket, Menu, X, Play, Code, Layers
 } from 'lucide-react';
 
 const sections = [
   { id: 'overview', title: 'Overview', icon: BookOpen },
   { id: 'getting-started', title: 'Getting Started', icon: Play },
   { id: 'chat-wallet', title: 'Chat Wallet', icon: MessageSquare },
-  { id: 'crypto-to-fiat', title: 'Crypto to Fiat', icon: ArrowLeftRight },
   { id: 'virtual-cards', title: 'Virtual Cards', icon: CreditCard },
   { id: 'privacy', title: 'Privacy & Security', icon: Shield },
-  { id: 'ai-assistant', title: 'AI Banking Assistant', icon: Bot },
-  { id: 'group-wallets', title: 'Group Wallets', icon: Users },
-  { id: 'scheduled-payments', title: 'Scheduled Payments', icon: Clock },
-  { id: 'dashboard', title: 'Spending Dashboard', icon: BarChart3 },
-  { id: 'on-chain-receipts', title: 'On-Chain Receipts', icon: FileText },
-  { id: 'api-reference', title: 'API Reference', icon: Code },
-  { id: 'architecture', title: 'Architecture', icon: BookOpen },
+  { id: 'ai-assistant', title: 'AI Payment Parser', icon: Bot },
+  { id: 'scheduled-payments', title: 'Scheduled Payments', icon: Clock, comingSoon: true },
+  { id: 'dashboard', title: 'Dashboard', icon: BarChart3 },
+  { id: 'architecture', title: 'Architecture', icon: Layers },
 ];
 
 export const DocsPage = () => {
@@ -100,6 +96,9 @@ export const DocsPage = () => {
                 >
                   <Icon className="w-4 h-4 flex-shrink-0" />
                   {s.title}
+                  {'comingSoon' in s && s.comingSoon && (
+                    <span className="ml-auto text-[10px] font-semibold uppercase tracking-wider text-orange-500 bg-orange-50 px-2 py-0.5 rounded-full">Soon</span>
+                  )}
                 </button>
               );
             })}
@@ -123,17 +122,17 @@ export const DocsPage = () => {
               SendlyFi Documentation
             </h1>
             <p className="text-lg text-gray-600 leading-relaxed max-w-3xl mb-8">
-              SendlyFi is a chat-first banking application built on the Solana blockchain. It enables users to send and receive cryptocurrency, off-ramp to local fiat currencies, generate virtual debit cards, and manage shared wallets, all from within a single conversational interface.
+              SendlyFi is a chat-first crypto wallet and payment platform built on Solana. Users send and receive SOL and USDC through natural language chat messages, manage virtual debit cards, and track their balances, all from a single conversational interface.
             </p>
             <p className="text-lg text-gray-600 leading-relaxed max-w-3xl mb-10">
-              This documentation covers every feature of the SendlyFi platform, its privacy architecture, the AI banking assistant, and the underlying technical infrastructure that makes sub-second settlement and confidential transactions possible.
+              This documentation covers every implemented feature of the platform, the security model, the AI-powered payment parser, and the underlying technical architecture.
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {[
-                { title: 'Chat Wallet', desc: 'Send payments via conversation', id: 'chat-wallet', color: 'bg-[#9945FF]' },
-                { title: 'Crypto to Fiat', desc: 'Off-ramp to 100+ currencies', id: 'crypto-to-fiat', color: 'bg-[#14F195]' },
-                { title: 'Virtual Cards', desc: 'Spend crypto anywhere', id: 'virtual-cards', color: 'bg-[#00C2FF]' },
+                { title: 'Chat Wallet', desc: 'Send payments via natural language', id: 'chat-wallet', color: 'bg-[#9945FF]' },
+                { title: 'Virtual Cards', desc: 'Visa & Mastercard, mainnet only', id: 'virtual-cards', color: 'bg-[#00C2FF]' },
+                { title: 'AI Payment Parser', desc: 'Gemini-powered intent detection', id: 'ai-assistant', color: 'bg-[#14F195]' },
               ].map((card) => (
                 <button
                   key={card.id}
@@ -150,302 +149,195 @@ export const DocsPage = () => {
           </section>
 
           <section id="getting-started" className="mb-20 scroll-mt-24">
-            <SectionHeader icon={Play} title="Getting Started" subtitle="Get up and running with SendlyFi in minutes." />
+            <SectionHeader icon={Play} title="Getting Started" subtitle="Create an account and start sending payments in minutes." />
             <DocSubheading>1. Create Your Account</DocSubheading>
             <DocParagraph>
-              Download the SendlyFi app from the App Store or Google Play, or visit the web application. Sign up using your email address or connect an existing Solana wallet. If you do not have a wallet, SendlyFi will generate one for you automatically, secured by your device's biometric authentication (Face ID, fingerprint, or device PIN).
+              Visit the SendlyFi web application and click "Launch App." On the sign-up screen, choose a username and set a password. SendlyFi will generate a unique 8-character ZKID for you. This ZKID is your login identifier, so save it securely. No email address or phone number is required.
             </DocParagraph>
-            <DocSubheading>2. Fund Your Wallet</DocSubheading>
+            <DocSubheading>2. Create a Wallet</DocSubheading>
             <DocParagraph>
-              Deposit SOL, USDC, USDT, or any supported SPL token into your SendlyFi wallet address. You can fund your account by transferring tokens from an external wallet, purchasing crypto directly within the app using a debit card, or receiving a payment from another SendlyFi user.
+              After signing up, you will be prompted to create a Solana wallet. SendlyFi generates a new keypair for you, with the private key encrypted using AES-256-GCM before being stored. Your public key is your wallet address. You can also import this wallet into Phantom or other Solana wallets using the private key shown during creation.
             </DocParagraph>
-            <DocSubheading>3. Start a Conversation</DocSubheading>
+            <DocSubheading>3. Fund Your Wallet</DocSubheading>
             <DocParagraph>
-              Open a new chat thread with any contact using their wallet address, SendlyFi username, or Solana Name Service (SNS) domain. Type a message to start chatting, or use the inline payment composer to send your first payment. Payments are confirmed with a single tap and settle on Solana in under one second.
+              On devnet, you start with 10 SOL and 1,000 USDC in simulated balances for testing. On mainnet, deposit SOL or USDC to your wallet address from any external wallet or exchange. Your balances update automatically via Solana RPC queries.
             </DocParagraph>
-            <DocSubheading>4. Explore Features</DocSubheading>
-            <DocList items={[
-              'Generate a virtual debit card from the Cards tab to start spending crypto at any merchant',
-              'Set up an off-ramp to your bank account from the Wallet tab to convert stablecoins to local fiat currency',
-              'Create a group wallet from the Groups tab to pool funds with friends, teammates, or DAO members',
-              'Enable the AI Banking Assistant from Settings to get spending insights and automated budget tracking',
-              'Configure scheduled payments for recurring transfers, rent, or payroll',
-            ]} />
+            <DocSubheading>4. Start Chatting & Paying</DocSubheading>
+            <DocParagraph>
+              Open the Chat tab, search for another user by username, and start a conversation. Type natural language messages like "send 50 USDC" or "pay 2 SOL" and the AI parser will detect your intent and prompt you to confirm the payment.
+            </DocParagraph>
             <DocSubheading>Prerequisites</DocSubheading>
             <DocList items={[
-              'A smartphone (iOS 15+ or Android 10+) or a modern web browser (Chrome, Firefox, Safari, Edge)',
-              'An email address for account creation (or an existing Solana wallet)',
-              'SOL for transaction fees (typically under $0.001 per transaction)',
-              'For off-ramp: a bank account in a supported country',
-              'For virtual cards: identity verification (KYC) may be required for higher spending tiers',
+              'A modern web browser (Chrome, Firefox, Safari, or Edge)',
+              'SOL for transaction fees on mainnet (typically under $0.001 per transaction)',
+              'No email, phone number, or KYC required for basic usage',
             ]} />
           </section>
 
           <section id="chat-wallet" className="mb-20 scroll-mt-24">
-            <SectionHeader icon={MessageSquare} title="Chat Wallet" subtitle="Wallet-native messaging that turns every conversation into a payment channel." />
+            <SectionHeader icon={MessageSquare} title="Chat Wallet" subtitle="Peer-to-peer payments through natural language chat messages." />
             <DocParagraph>
-              The Chat Wallet is the core interface of SendlyFi. Every SendlyFi user is identified by their Solana wallet address, and every conversation thread doubles as a payment rail. Users can send SOL, USDC, USDT, and other SPL tokens directly within a chat message, with no need to switch between applications or copy-paste addresses.
+              The Chat Wallet is the core interface of SendlyFi. Users search for other SendlyFi users by username, open a conversation, and send messages or payments within a single thread. Conversations are real-time with 4-second polling for new messages.
             </DocParagraph>
             <DocParagraph>
-              Payments are initiated with natural language commands or through an inline payment composer. Typing a message such as "Send 50 USDC" to a contact triggers a confirmation modal with transaction details, estimated fees, and a one-tap approval flow. The recipient receives the funds in their SendlyFi wallet within seconds, accompanied by a chat notification.
+              Payments are initiated by typing natural language commands such as "send 50 USDC" or "pay @alice 2 SOL." The AI payment parser (powered by Gemini 2.5 Flash) detects the intent and presents a confirmation card with transaction details. After the user confirms with their password, the transfer is executed.
             </DocParagraph>
-            <DocSubheading>Key Capabilities</DocSubheading>
+            <DocSubheading>How Payments Work</DocSubheading>
             <DocList items={[
-              'Peer-to-peer transfers using any SPL token within the chat interface',
-              'Payment requests with shareable deep links',
-              'Bill splitting across group conversations with automatic settlement',
-              'Transaction receipts embedded inline with message history',
-              'QR code generation for in-person payments',
-              'Contact resolution via wallet address, SendlyFi username, or Solana Name Service (SNS) domain',
+              'Devnet: Transfers are simulated using database balance updates (instant, no on-chain transaction)',
+              'Mainnet: Transfers are executed on-chain via @solana/web3.js with real SOL or USDC SPL token transfers',
+              'Payment messages appear as styled cards in the chat thread with amount, token, and status',
+              'Mainnet transactions include a link to Solana Explorer for verification',
             ]} />
-            <DocSubheading>How It Works</DocSubheading>
-            <DocParagraph>
-              When a user initiates a payment, SendlyFi constructs a Solana transaction using the SPL Token program. The transaction is signed client-side using the user's embedded wallet (powered by a secure enclave on mobile devices or a browser extension on desktop). The signed transaction is submitted to a Solana RPC node, and SendlyFi monitors the transaction until finality is confirmed. The entire flow completes in under one second on average.
-            </DocParagraph>
-          </section>
-
-          <section id="crypto-to-fiat" className="mb-20 scroll-mt-24">
-            <SectionHeader icon={ArrowLeftRight} title="Crypto to Fiat" subtitle="Off-ramp stablecoins to local bank accounts in seconds." />
-            <DocParagraph>
-              SendlyFi provides a built-in off-ramp that converts stablecoins (USDC, USDT) into local fiat currencies and deposits them directly into the user's linked bank account. The service is available in over 100 countries and supports major currencies including USD, EUR, GBP, NGN, KES, GHS, ZAR, INR, BRL, and PHP.
-            </DocParagraph>
-            <DocParagraph>
-              The off-ramp is powered by a network of regulated liquidity partners. SendlyFi aggregates quotes from multiple providers in real time to ensure users receive the best available exchange rate. There are no hidden markups; the displayed rate is the rate the user receives.
-            </DocParagraph>
-            <DocSubheading>Settlement Flow</DocSubheading>
-            <DocParagraph>
-              When a user initiates an off-ramp, the stablecoins are locked in a smart contract escrow on Solana. The escrow releases the tokens to the liquidity provider only after the fiat settlement is confirmed. If the fiat transfer fails, the escrowed tokens are returned to the user automatically. Settlement times vary by corridor but are typically under 60 seconds for supported instant-payment networks (e.g., SEPA Instant, Faster Payments, NIBSS Instant Payment).
-            </DocParagraph>
-            <DocSubheading>Supported Corridors</DocSubheading>
+            <DocSubheading>Supported Tokens</DocSubheading>
             <DocList items={[
-              'USDC/USDT to NGN via local bank transfer (instant)',
-              'USDC/USDT to USD via ACH or wire transfer',
-              'USDC/USDT to EUR via SEPA or SEPA Instant',
-              'USDC/USDT to GBP via Faster Payments',
-              'USDC/USDT to KES, GHS, ZAR, INR, BRL, PHP via local rails',
-              'Additional corridors are added regularly based on user demand',
+              'SOL (native Solana token)',
+              'USDC (SPL token, Devnet: Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr, Mainnet: EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v)',
             ]} />
+            <DocSubheading>Network Modes</DocSubheading>
+            <DocParagraph>
+              Users can toggle between devnet and mainnet from the dashboard sidebar. Devnet is for testing with simulated balances. Mainnet uses real Solana tokens and on-chain transactions. The active network is displayed as a badge throughout the dashboard.
+            </DocParagraph>
           </section>
 
           <section id="virtual-cards" className="mb-20 scroll-mt-24">
-            <SectionHeader icon={CreditCard} title="Virtual Cards" subtitle="Spend crypto anywhere with instantly generated virtual debit cards." />
+            <SectionHeader icon={CreditCard} title="Virtual Cards" subtitle="Visa and Mastercard virtual debit cards, available on mainnet." />
             <DocParagraph>
-              SendlyFi allows users to generate virtual Visa debit cards that are funded directly from their SendlyFi wallet. These cards can be used for online purchases, subscription payments, and anywhere Visa is accepted globally. Cards are created instantly and can be frozen, unfrozen, or deleted at any time from the SendlyFi interface.
+              SendlyFi allows mainnet users to generate virtual debit cards (Visa and Mastercard) directly from the dashboard. Cards feature animated SVG designs with realistic branding and styling. Card details (number, CVV, expiry) are encrypted with AES-256-GCM and only revealed on demand.
             </DocParagraph>
             <DocSubheading>Card Features</DocSubheading>
             <DocList items={[
-              'Instant issuance with no KYC friction for low-value cards',
-              'Real-time spend notifications within the chat interface',
-              'Per-card spending limits and merchant category controls',
-              'Auto-top-up from wallet balance when the card balance is low',
-              'Support for multiple active cards (e.g., one for subscriptions, one for daily spending)',
-              'Temporary cards with automatic expiration for one-time purchases',
+              'Visa cards with blue gradient design (#1A1F71/#00579F)',
+              'Mastercard cards with dark base (#1A1A2E) and red/orange overlapping circles',
+              'Luhn-valid 16-digit card numbers generated at creation',
+              'AES-256-GCM encrypted storage for card number, CVV, and expiry date',
+              'Cardholder name customization during creation',
+              'Freeze and unfreeze cards instantly',
+              '7-day soft delete with permanent removal after the grace period',
+              'Real-time mainnet wallet balance display (SOL + USDC) on the cards page',
             ]} />
+            <DocSubheading>Mainnet Only</DocSubheading>
             <DocParagraph>
-              When a card transaction is authorized, SendlyFi converts the required amount of USDC from the user's wallet into fiat at the prevailing market rate and settles with the card network. The conversion rate and any applicable fees are displayed in the transaction receipt.
+              Virtual card creation is restricted to mainnet mode. Users on devnet will see a prompt to switch to mainnet before they can create cards. This ensures cards are only associated with real wallet balances.
             </DocParagraph>
           </section>
 
           <section id="privacy" className="mb-20 scroll-mt-24">
-            <SectionHeader icon={Shield} title="Privacy & Security" subtitle="End-to-end encrypted messaging and zero-knowledge transaction proofs." />
+            <SectionHeader icon={Shield} title="Privacy & Security" subtitle="How SendlyFi protects your account and wallet data." />
             <DocParagraph>
-              Privacy is a foundational principle of SendlyFi. All messages between users are encrypted end-to-end using the Signal Protocol, ensuring that SendlyFi servers never have access to message content. Financial transactions are further protected using zero-knowledge proofs, which allow the network to verify transaction validity without revealing the sender, recipient, or amount to any third party.
+              SendlyFi is designed with security at every layer. User passwords are hashed with bcrypt before storage. Session tokens are signed with JWT and validated on every API request. Wallet private keys and card details are encrypted with AES-256-GCM using a server-side secret key.
             </DocParagraph>
-            <DocSubheading>Zero-Knowledge Infrastructure</DocSubheading>
-            <DocParagraph>
-              SendlyFi uses a custom zero-knowledge proof system built on top of Solana's programmable infrastructure. When a user sends a private payment, a zk-SNARK proof is generated client-side that attests to the validity of the transaction (sufficient balance, correct token type, authorized sender) without revealing the transaction details on-chain. The proof is submitted alongside the transaction and verified by the SendlyFi program on Solana.
-            </DocParagraph>
-            <DocSubheading>Security Measures</DocSubheading>
+            <DocSubheading>Authentication</DocSubheading>
             <DocList items={[
-              'End-to-end encrypted messaging (Signal Protocol)',
-              'Client-side zk-SNARK proof generation for private payments',
-              'Biometric authentication (Face ID, fingerprint) for transaction signing',
-              'Hardware-backed key storage using device secure enclaves',
-              'Rate limiting and anomaly detection on all API endpoints',
-              'Regular third-party security audits and penetration testing',
-              'Bug bounty program for responsible vulnerability disclosure',
+              'ZKID-based login: Each user receives a unique 8-character alphanumeric identifier at signup',
+              'Passwords are hashed with bcrypt (salt rounds) and never stored in plaintext',
+              'JWT bearer tokens are used for API session authentication',
+              'Token validation occurs on every protected API endpoint via middleware',
             ]} />
+            <DocSubheading>Encryption</DocSubheading>
+            <DocList items={[
+              'Wallet private keys are encrypted with AES-256-GCM before database storage',
+              'Virtual card details (number, CVV, expiry) are encrypted with AES-256-GCM',
+              'Encryption key is derived from a server-side JWT_SECRET (persisted to disk)',
+              'All API communication uses HTTPS',
+            ]} />
+            <DocSubheading>Data Handling</DocSubheading>
+            <DocParagraph>
+              SendlyFi does not collect email addresses, phone numbers, or any personal identification documents for basic usage. User accounts are identified solely by their ZKID and chosen username. The platform does not use third-party analytics or tracking.
+            </DocParagraph>
           </section>
 
           <section id="ai-assistant" className="mb-20 scroll-mt-24">
-            <SectionHeader icon={Bot} title="AI Banking Assistant" subtitle="A conversational AI that helps manage finances within the chat." />
+            <SectionHeader icon={Bot} title="AI Payment Parser" subtitle="Gemini-powered natural language payment intent detection." />
             <DocParagraph>
-              The SendlyFi AI Assistant is an integrated conversational agent that helps users manage their finances without leaving the chat interface. Users can interact with the assistant using natural language to check balances, review spending patterns, set up budgets, automate payments, and receive personalized financial insights.
+              SendlyFi uses Google's Gemini 2.5 Flash model to parse natural language messages and detect payment intents. When a user types something like "send 100 USDC to @bob" in a chat, the AI parser extracts the action, amount, and token, then presents a confirmation card before executing the transfer.
             </DocParagraph>
-            <DocSubheading>Capabilities</DocSubheading>
+            <DocSubheading>How It Works</DocSubheading>
             <DocList items={[
-              'Balance inquiries across all tokens and fiat accounts',
-              'Spending summaries by category, time period, or merchant',
-              'Budget creation and tracking with automated alerts',
-              'Payment scheduling and recurring transfer setup',
-              'Transaction search and filtering by amount, date, or contact',
-              'Currency conversion quotes and rate alerts',
-              'Guided onboarding for new users',
+              'Each outgoing message is sent to the /api/chat/parse-intent endpoint',
+              'The endpoint calls Gemini 2.5 Flash with a structured prompt to classify the message',
+              'If a payment intent is detected, the response includes type: "payment", amount, and token (SOL or USDC)',
+              'If no payment intent is found, the response is type: "text" and the message is sent as a regular chat message',
+              'The parser supports "send all" and "send balance" keywords to transfer the full balance',
+              'Recipient extraction via @username mentions is supported',
+              'Parsing is English-only',
             ]} />
+            <DocSubheading>Fallback Behavior</DocSubheading>
             <DocParagraph>
-              The AI Assistant processes all queries locally where possible and never stores conversation history on external servers. For queries that require server-side processing (e.g., transaction history lookups), requests are encrypted in transit and at rest.
+              If the AI parser encounters an error or is temporarily unavailable, the message is sent as plain text with an informational notice. The chat system never blocks message delivery due to a parsing failure.
             </DocParagraph>
-          </section>
-
-          <section id="group-wallets" className="mb-20 scroll-mt-24">
-            <SectionHeader icon={Users} title="Group Wallets" subtitle="Shared wallets for teams, DAOs, and everyday group expenses." />
-            <DocParagraph>
-              SendlyFi Group Wallets allow multiple users to pool funds into a shared account with configurable access controls. Group wallets are ideal for roommates splitting rent, teams managing project budgets, or DAOs coordinating treasury operations.
-            </DocParagraph>
-            <DocSubheading>Access Control Model</DocSubheading>
-            <DocParagraph>
-              Each group wallet supports role-based permissions. The wallet creator (Admin) can assign roles to members: Admin (full control), Spender (can initiate transactions up to a defined limit), and Viewer (read-only access to balance and history). Transactions above the configured threshold require multi-signature approval from a quorum of Admins.
-            </DocParagraph>
-            <DocList items={[
-              'Role-based access: Admin, Spender, Viewer',
-              'Configurable spending limits per member',
-              'Multi-signature approval for high-value transactions',
-              'Shared transaction history visible to all members',
-              'Integration with the chat interface for group discussions about finances',
-              'Export of group wallet activity for accounting and tax reporting',
-            ]} />
           </section>
 
           <section id="scheduled-payments" className="mb-20 scroll-mt-24">
-            <SectionHeader icon={Clock} title="Scheduled Payments" subtitle="Automate recurring transfers, bill splits, and payouts." />
+            <div className="flex items-center gap-3 mb-3">
+              <SectionHeader icon={Clock} title="Scheduled Payments" subtitle="Automate recurring transfers and payouts." />
+            </div>
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-orange-50 text-orange-600 text-xs font-semibold mb-6 uppercase tracking-widest">
+              Coming Soon
+            </div>
             <DocParagraph>
-              SendlyFi Scheduled Payments allow users to set up recurring transfers that execute automatically at defined intervals. Common use cases include salary payouts to global contributors, monthly rent payments, subscription top-ups, and recurring bill splits among group members.
-            </DocParagraph>
-            <DocSubheading>Configuration Options</DocSubheading>
-            <DocList items={[
-              'Frequency: daily, weekly, bi-weekly, monthly, or custom cron expressions',
-              'Fixed amount or percentage-of-balance transfers',
-              'Multi-recipient payouts in a single scheduled batch',
-              'Automatic retry with configurable failure policies',
-              'Notification preferences for upcoming and completed payments',
-              'Pause, resume, or cancel schedules at any time',
-            ]} />
-            <DocParagraph>
-              Scheduled payments are managed by the SendlyFi orchestration layer, which submits transactions to Solana at the specified intervals. If a scheduled payment fails (e.g., due to insufficient balance), the system retries according to the configured policy and notifies the user.
+              Scheduled Payments will allow users to set up recurring transfers that execute automatically at defined intervals. The payments page is currently available in the dashboard with a placeholder interface. Full scheduling functionality, including interval configuration, multi-recipient payouts, and automatic retry, is planned for a future release.
             </DocParagraph>
           </section>
 
           <section id="dashboard" className="mb-20 scroll-mt-24">
-            <SectionHeader icon={BarChart3} title="Spending Dashboard" subtitle="Track balances, transaction history, and spending trends." />
+            <SectionHeader icon={BarChart3} title="Dashboard" subtitle="Wallet overview, balances, and account management." />
             <DocParagraph>
-              The Spending Dashboard provides a comprehensive view of a user's financial activity across all SendlyFi accounts. It aggregates data from the chat wallet, virtual cards, group wallets, and off-ramp transactions into a single, unified interface.
+              The SendlyFi dashboard provides a complete view of your wallet and account. It is a responsive layout with a sidebar on desktop and bottom navigation tabs on mobile.
             </DocParagraph>
-            <DocSubheading>Dashboard Features</DocSubheading>
+            <DocSubheading>Dashboard Pages</DocSubheading>
             <DocList items={[
-              'Real-time balance display across all tokens and fiat accounts',
-              'Transaction history with search, filter, and export capabilities',
-              'Spending categorization by merchant type, contact, or custom tags',
-              'Weekly and monthly spending trend charts',
-              'Budget progress indicators with visual alerts',
-              'Downloadable CSV and PDF reports for accounting',
+              'Overview: Live wallet balance (SOL and USDC) fetched from Solana RPC, USD conversion via CoinGecko prices, public key display, network badge, quick action buttons, auto-refresh every 30 seconds',
+              'Wallets: Full wallet address, per-token balances with USD conversion, copy address, link to Solana Explorer, network badge (Devnet or Mainnet)',
+              'Chat: User search, conversation list with last message preview, real-time messaging, AI-powered payment initiation',
+              'Cards: Virtual card management with animated SVG cards, card detail reveal, freeze/unfreeze, delete (mainnet only)',
+              'Payments: Scheduled payments interface (coming soon)',
+              'Settings: Profile information, security settings, and preferences',
             ]} />
-          </section>
-
-          <section id="on-chain-receipts" className="mb-20 scroll-mt-24">
-            <SectionHeader icon={FileText} title="On-Chain Receipts" subtitle="Immutable transaction records for compliance and accounting." />
+            <DocSubheading>Network Toggle</DocSubheading>
             <DocParagraph>
-              Every transaction processed through SendlyFi generates an on-chain receipt that is permanently recorded on the Solana blockchain. These receipts serve as immutable, timestamped proof of payment and are accessible to both sender and recipient at any time.
-            </DocParagraph>
-            <DocSubheading>Receipt Contents</DocSubheading>
-            <DocList items={[
-              'Transaction hash and Solana block number',
-              'Sender and recipient identifiers (wallet address or SendlyFi username)',
-              'Token type, amount, and USD-equivalent value at time of transfer',
-              'Timestamp and confirmation status',
-              'Associated memo or message (if included by the sender)',
-              'Link to Solana Explorer for independent verification',
-            ]} />
-            <DocParagraph>
-              On-chain receipts can be exported individually or in bulk for tax preparation and compliance reporting. SendlyFi provides integrations with popular accounting tools and generates formatted reports compatible with tax filing requirements in supported jurisdictions.
-            </DocParagraph>
-          </section>
-
-          <section id="api-reference" className="mb-20 scroll-mt-24">
-            <SectionHeader icon={Code} title="API Reference" subtitle="Programmatic access to SendlyFi's core banking and payment functionality." />
-            <DocParagraph>
-              The SendlyFi API provides RESTful endpoints for integrating SendlyFi's payment, wallet, and card management capabilities into third-party applications. All API requests are authenticated using API keys issued from the SendlyFi developer dashboard. Requests and responses use JSON encoding over HTTPS.
-            </DocParagraph>
-            <DocSubheading>Base URL</DocSubheading>
-            <div className="bg-[#111] text-[#14F195] font-mono text-sm p-4 rounded-xl mb-6 max-w-3xl overflow-x-auto">
-              https://api.sendlyfi.com/v1
-            </div>
-            <DocSubheading>Authentication</DocSubheading>
-            <DocParagraph>
-              All API requests require an API key passed in the Authorization header. API keys are scoped to specific permissions (read-only, transactional, admin) and can be rotated from the developer dashboard. Rate limits are enforced per key: 100 requests per second for read endpoints and 10 requests per second for write endpoints.
-            </DocParagraph>
-            <div className="bg-[#111] text-gray-300 font-mono text-sm p-4 rounded-xl mb-6 max-w-3xl overflow-x-auto">
-              <span className="text-[#9945FF]">Authorization:</span> Bearer sk_live_your_api_key
-            </div>
-            <DocSubheading>Core Endpoints</DocSubheading>
-            <div className="space-y-4 max-w-3xl mb-6">
-              {[
-                { method: 'GET', path: '/wallets/:id', desc: 'Retrieve wallet balance and metadata' },
-                { method: 'POST', path: '/transfers', desc: 'Initiate a peer-to-peer token transfer' },
-                { method: 'POST', path: '/offramp', desc: 'Convert stablecoins to fiat and initiate bank deposit' },
-                { method: 'GET', path: '/transactions', desc: 'List transaction history with filtering and pagination' },
-                { method: 'POST', path: '/cards', desc: 'Create a new virtual debit card' },
-                { method: 'PATCH', path: '/cards/:id', desc: 'Update card status, limits, or merchant controls' },
-                { method: 'DELETE', path: '/cards/:id', desc: 'Permanently delete a virtual card' },
-                { method: 'POST', path: '/groups', desc: 'Create a new group wallet' },
-                { method: 'POST', path: '/groups/:id/members', desc: 'Add a member with role-based permissions' },
-                { method: 'POST', path: '/schedules', desc: 'Create a scheduled recurring payment' },
-                { method: 'GET', path: '/receipts/:txHash', desc: 'Retrieve on-chain receipt for a transaction' },
-              ].map((ep, i) => (
-                <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-white border border-gray-100">
-                  <span className={`font-mono text-xs font-bold px-2 py-1 rounded ${
-                    ep.method === 'GET' ? 'bg-blue-100 text-blue-700' :
-                    ep.method === 'POST' ? 'bg-green-100 text-green-700' :
-                    ep.method === 'PATCH' ? 'bg-yellow-100 text-yellow-700' :
-                    'bg-red-100 text-red-700'
-                  }`}>{ep.method}</span>
-                  <div>
-                    <code className="text-sm font-mono text-gray-800">{ep.path}</code>
-                    <p className="text-sm text-gray-500 mt-0.5">{ep.desc}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <DocSubheading>Webhooks</DocSubheading>
-            <DocParagraph>
-              SendlyFi supports webhook notifications for real-time event delivery. Configure webhook URLs in the developer dashboard to receive HTTP POST callbacks for events such as payment completion, off-ramp settlement, card authorization, and scheduled payment execution. All webhook payloads are signed with HMAC-SHA256 for authenticity verification.
-            </DocParagraph>
-            <DocSubheading>SDKs</DocSubheading>
-            <DocParagraph>
-              Official SDKs are available for JavaScript/TypeScript, Python, and Rust. The SDKs wrap the REST API with typed interfaces, automatic retry logic, and webhook signature verification utilities. SDKs are published to npm, PyPI, and crates.io respectively.
+              The dashboard sidebar includes a toggle to switch between Devnet and Mainnet. Devnet uses simulated balances stored in the database. Mainnet queries live balances from the Solana blockchain via Helius RPC. The current network mode is persisted per user and displayed throughout the interface.
             </DocParagraph>
           </section>
 
           <section id="architecture" className="mb-20 scroll-mt-24">
-            <SectionHeader icon={BookOpen} title="Architecture" subtitle="Technical overview of the SendlyFi platform." />
+            <SectionHeader icon={Layers} title="Architecture" subtitle="Technical overview of the SendlyFi platform." />
             <DocParagraph>
-              SendlyFi is built on the Solana blockchain, chosen for its high throughput (up to 65,000 transactions per second), sub-second finality, and minimal transaction fees (typically under $0.001 per transaction). The platform consists of three primary layers: the client application, the orchestration layer, and the on-chain programs.
+              SendlyFi is built on the Solana blockchain, chosen for its high throughput, sub-second finality, and minimal transaction fees (typically under $0.001 per transaction). The platform is a full-stack web application with a React frontend and Express API backend, connected to PostgreSQL for persistent storage and Solana RPC for blockchain operations.
             </DocParagraph>
-            <DocSubheading>Client Application</DocSubheading>
+            <DocSubheading>Frontend</DocSubheading>
             <DocParagraph>
-              The SendlyFi client is available as a mobile application (iOS and Android) and a web application. The client handles wallet management, message encryption/decryption, zk-SNARK proof generation, and transaction signing. All sensitive operations (key storage, biometric authentication, proof generation) are performed client-side to minimize trust assumptions.
+              The client is a React 19 + TypeScript single-page application built with Vite 6. It uses Tailwind CSS v4 for styling, React Router for client-side navigation, Framer Motion for animations, and React Three Fiber with Three.js for 3D graphics on the landing page. The frontend runs on port 5000 and proxies API requests to the backend.
             </DocParagraph>
-            <DocSubheading>Orchestration Layer</DocSubheading>
+            <DocSubheading>Backend</DocSubheading>
             <DocParagraph>
-              The orchestration layer manages scheduled payments, off-ramp coordination, card issuance, and notification delivery. It communicates with the Solana blockchain via RPC nodes and with external partners (liquidity providers, card networks) via secure API integrations. The orchestration layer does not have access to user private keys or message content.
+              The API server is an Express 4 application running on port 3001 with TypeScript (via tsx). It handles authentication (bcrypt + JWT), wallet management (keypair generation via @solana/web3.js, AES-256-GCM encryption), chat and messaging, AI intent parsing (Google Gemini via @google/genai), and Solana transactions (on-chain transfers for mainnet, database transfers for devnet).
             </DocParagraph>
-            <DocSubheading>On-Chain Programs</DocSubheading>
+            <DocSubheading>Database</DocSubheading>
             <DocParagraph>
-              SendlyFi deploys a set of Solana programs (smart contracts) that handle escrow, multi-signature approval, zero-knowledge proof verification, and on-chain receipt generation. These programs are open-source, audited, and upgradeable via a governance mechanism controlled by the SendlyFi DAO.
+              PostgreSQL stores user accounts, encrypted wallet keys, conversations, messages, transactions, virtual card data, and devnet simulated balances. The schema includes tables for users, wallets, conversations, messages, transactions, testnet_balances, and virtual_cards.
             </DocParagraph>
+            <DocSubheading>External Services</DocSubheading>
+            <DocList items={[
+              'Solana RPC (Helius): Blockchain queries for mainnet balances and transaction submission',
+              'Solana Devnet RPC: Development and testing environment',
+              'Google Gemini 2.5 Flash: Natural language payment intent parsing via Replit AI Integrations',
+              'CoinGecko API: Real-time SOL and USDC price data with 30-second cache',
+            ]} />
 
             <div className="mt-10 p-6 rounded-2xl bg-gradient-to-br from-[#9945FF]/5 to-[#14F195]/5 border border-[#9945FF]/10">
               <h4 className="font-semibold text-gray-900 mb-3">Technology Stack</h4>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
                 {[
-                  'Solana Blockchain',
-                  'SPL Token Program',
-                  'Signal Protocol (E2EE)',
-                  'zk-SNARKs',
-                  'Rust (On-Chain)',
-                  'React Native (Mobile)',
-                  'TypeScript (Web)',
-                  'Solana Web3.js',
-                  'Anchor Framework',
+                  'React 19 + TypeScript',
+                  'Vite 6',
+                  'Tailwind CSS v4',
+                  'Express 4',
+                  'PostgreSQL',
+                  '@solana/web3.js',
+                  'Three.js / R3F',
+                  'Framer Motion',
+                  '@google/genai (Gemini)',
                 ].map((tech) => (
                   <div key={tech} className="flex items-center gap-2 text-gray-600">
                     <div className="w-1.5 h-1.5 rounded-full bg-[#9945FF]" />
@@ -460,7 +352,7 @@ export const DocsPage = () => {
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
               <div>
                 <h3 className="text-xl font-bold mb-2">Ready to get started?</h3>
-                <p className="text-gray-400 text-sm">Join the future of chat-based banking on Solana.</p>
+                <p className="text-gray-400 text-sm">Join the future of chat-based payments on Solana.</p>
               </div>
               <Link to="/dashboard" className="bg-[#9945FF] hover:bg-[#8030E0] text-white px-6 py-3 rounded-xl text-sm font-medium flex items-center gap-2 transition-colors whitespace-nowrap">
                 Launch App

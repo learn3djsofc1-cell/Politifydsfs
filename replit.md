@@ -9,7 +9,7 @@ A React + TypeScript landing page and dashboard app for **SendlyFi**, a crypto-t
 ## Routing
 - **React Router** (`react-router-dom`) provides client-side routing via `BrowserRouter`
 - `/` - Landing page with all sections
-- `/docs` - Full documentation page with sidebar navigation
+- `/docs` - Documentation page with sidebar navigation (accurate to implemented features, "Coming Soon" badges for planned features)
 - `/signup` - Create account (password > receive ZKID)
 - `/login` - Log in with ZKID + password
 - `/dashboard/create-wallet` - Wallet creation page (shown if user has no wallet)

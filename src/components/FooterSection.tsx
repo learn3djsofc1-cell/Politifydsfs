@@ -132,11 +132,9 @@ export const FooterSection = () => {
           <div className="md:col-span-2 flex flex-col">
             <h4 className="text-sm font-semibold mb-6 text-white">Product</h4>
             <ul className="flex flex-col gap-4 text-gray-400 text-sm">
-              <li><a href="#" className="hover:text-[#9945FF] transition-colors">Chat Wallet</a></li>
-              <li><a href="#" className="hover:text-[#9945FF] transition-colors">Crypto to Fiat</a></li>
-              <li><a href="#" className="hover:text-[#9945FF] transition-colors">Smart Cards</a></li>
-              <li><a href="#" className="hover:text-[#9945FF] transition-colors">Privacy Engine</a></li>
-              <li><a href="#" className="hover:text-[#9945FF] transition-colors">Pricing</a></li>
+              <li><Link to="/dashboard/chat" className="hover:text-[#9945FF] transition-colors">Chat Wallet</Link></li>
+              <li><Link to="/dashboard/cards" className="hover:text-[#9945FF] transition-colors">Virtual Cards</Link></li>
+              <li><Link to="/docs#privacy" className="hover:text-[#9945FF] transition-colors">Privacy & Security</Link></li>
             </ul>
           </div>
 
@@ -145,9 +143,6 @@ export const FooterSection = () => {
             <h4 className="text-sm font-semibold mb-6 text-white">Resources</h4>
             <ul className="flex flex-col gap-4 text-gray-400 text-sm">
               <li><Link to="/docs" className="hover:text-[#14F195] transition-colors">Documentation</Link></li>
-              <li><a href="#" className="hover:text-[#14F195] transition-colors">API Reference</a></li>
-              <li><a href="#" className="hover:text-[#14F195] transition-colors">Blog</a></li>
-              <li><a href="#" className="hover:text-[#14F195] transition-colors">Status</a></li>
             </ul>
           </div>
 
