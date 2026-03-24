@@ -63,8 +63,13 @@ function generateCardNumber(cardType: 'visa' | 'mastercard'): string {
   if (cardType === 'visa') {
     prefix = '4';
   } else {
-    const mcPrefixes = ['51', '52', '53', '54', '55'];
-    prefix = mcPrefixes[crypto.randomInt(0, mcPrefixes.length)];
+    const useNewRange = crypto.randomInt(0, 2) === 0;
+    if (useNewRange) {
+      prefix = (2221 + crypto.randomInt(0, 500)).toString();
+    } else {
+      const mcPrefixes = ['51', '52', '53', '54', '55'];
+      prefix = mcPrefixes[crypto.randomInt(0, mcPrefixes.length)];
+    }
   }
 
   const totalLength = 16;

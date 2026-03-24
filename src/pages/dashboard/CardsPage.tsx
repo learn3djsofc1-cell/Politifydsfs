@@ -134,9 +134,9 @@ function AnimatedCardSVG({
             </linearGradient>
           ) : (
             <linearGradient id={`cardGrad-${last4}`} x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#1A1A2E"/>
-              <stop offset="50%" stopColor="#2D1B3D"/>
-              <stop offset="100%" stopColor="#1A1A2E"/>
+              <stop offset="0%" stopColor="#EB001B"/>
+              <stop offset="50%" stopColor="#FF5F00"/>
+              <stop offset="100%" stopColor="#F79E1B"/>
             </linearGradient>
           )}
           <linearGradient id={`chipGrad-${last4}`} x1="0%" y1="0%" x2="100%" y2="100%">
@@ -154,9 +154,9 @@ function AnimatedCardSVG({
           </>
         ) : (
           <>
-            <circle cx="120" cy="-20" r="140" fill="#EB001B" opacity="0.15"/>
-            <circle cx="300" cy="-10" r="130" fill="#F79E1B" opacity="0.12"/>
-            <circle cx="380" cy="200" r="100" fill="#FF5F00" opacity="0.08"/>
+            <circle cx="120" cy="-20" r="140" fill="white" opacity="0.08"/>
+            <circle cx="300" cy="-10" r="130" fill="white" opacity="0.06"/>
+            <circle cx="380" cy="200" r="100" fill="white" opacity="0.05"/>
           </>
         )}
 
@@ -258,16 +258,16 @@ function CardPreviewSVG({ cardType, selected }: { cardType: 'visa' | 'mastercard
             </linearGradient>
           ) : (
             <linearGradient id={`previewGrad-${cardType}`} x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#1A1A2E"/>
-              <stop offset="100%" stopColor="#2D1B3D"/>
+              <stop offset="0%" stopColor="#EB001B"/>
+              <stop offset="100%" stopColor="#F79E1B"/>
             </linearGradient>
           )}
         </defs>
         <rect width="200" height="125" rx="10" fill={`url(#previewGrad-${cardType})`}/>
         {!isVisa && (
           <>
-            <circle cx="60" cy="-5" r="60" fill="#EB001B" opacity="0.12"/>
-            <circle cx="150" cy="0" r="55" fill="#F79E1B" opacity="0.1"/>
+            <circle cx="60" cy="-5" r="60" fill="white" opacity="0.1"/>
+            <circle cx="150" cy="0" r="55" fill="white" opacity="0.08"/>
           </>
         )}
         <rect x="16" y="40" width="24" height="18" rx="3" fill="#F7D66A" opacity="0.8"/>
