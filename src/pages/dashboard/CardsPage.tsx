@@ -774,6 +774,7 @@ function CardComponent({
               className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-red-200 text-red-600 text-sm font-medium hover:bg-red-50 transition-colors disabled:opacity-50"
             >
               <Trash2 className="w-4 h-4" />
+              <span className="hidden sm:inline">Delete</span>
             </button>
           </>
         )}

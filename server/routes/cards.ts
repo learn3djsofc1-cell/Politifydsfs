@@ -196,9 +196,12 @@ router.get('/:id/details', requireAuth, async (req: AuthRequest, res: Response) 
       fullNumber = decryptCardData(card.card_number_encrypted);
       cvv = decryptCardData(card.cvv_encrypted);
     } catch {
-      fullNumber = `****${card.card_number_last4}`;
-      cvv = '***';
+      fullNumber = '';
+      cvv = '';
     }
+
+    if (!fullNumber) fullNumber = `**** **** **** ${card.card_number_last4}`;
+    if (!cvv) cvv = '***';
 
     res.json({
       cardNumber: fullNumber,
