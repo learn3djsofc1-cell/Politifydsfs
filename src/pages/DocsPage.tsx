@@ -295,7 +295,7 @@ export const DocsPage = () => {
             ]} />
             <DocSubheading>Network Selector</DocSubheading>
             <DocParagraph>
-              The network can be switched from the dedicated Network page or via the network selector in the sidebar (desktop) and top bar (mobile). Devnet uses simulated balances stored in the database. Mainnet queries live balances from the Solana blockchain via Helius RPC. The current network mode is persisted per user and displayed as a badge throughout the interface.
+              The network can be switched from the dedicated Network page in the sidebar, or via the compact network selector in the mobile top bar. Devnet uses simulated balances stored in the database. Mainnet queries live balances from the Solana blockchain via Helius RPC. The current network mode is persisted per user and displayed as a badge throughout the interface.
             </DocParagraph>
           </section>
 
