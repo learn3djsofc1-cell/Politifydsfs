@@ -3,7 +3,26 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import pool from './db.js';
 
-export const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(32).toString('hex');
+import fs from 'fs';
+import path from 'path';
+
+function getOrCreateStableSecret(): string {
+  if (process.env.JWT_SECRET) return process.env.JWT_SECRET;
+
+  const secretPath = path.join(process.cwd(), '.jwt_secret');
+  try {
+    const existing = fs.readFileSync(secretPath, 'utf8').trim();
+    if (existing.length >= 32) return existing;
+  } catch {}
+
+  const generated = crypto.randomBytes(32).toString('hex');
+  try {
+    fs.writeFileSync(secretPath, generated, { mode: 0o600 });
+  } catch {}
+  return generated;
+}
+
+export const JWT_SECRET = getOrCreateStableSecret();
 const JWT_EXPIRES_IN = '7d';
 const SALT_ROUNDS = 12;
 

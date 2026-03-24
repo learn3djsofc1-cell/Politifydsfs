@@ -609,6 +609,7 @@ export const CardsPage = () => {
             isMainnet={isMainnet}
             cardholderName={cardholderNameInput}
             setCardholderName={setCardholderNameInput}
+            balances={balances}
             onClose={() => { setShowCreateModal(false); setCardholderNameInput(''); }}
             onCreate={handleCreate}
           />
@@ -823,6 +824,7 @@ function CreateCardModal({
   isMainnet,
   cardholderName,
   setCardholderName,
+  balances,
   onClose,
   onCreate,
 }: {
@@ -834,6 +836,7 @@ function CreateCardModal({
   isMainnet: boolean;
   cardholderName: string;
   setCardholderName: (n: string) => void;
+  balances: WalletBalances;
   onClose: () => void;
   onCreate: () => void;
 }) {
@@ -867,6 +870,18 @@ function CreateCardModal({
               <p className="text-amber-800 text-sm font-medium">Mainnet Required</p>
               <p className="text-amber-700 text-xs mt-1">
                 Switch to Mainnet in Settings to create cards.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {isMainnet && (
+          <div className="flex items-center gap-2 p-3 rounded-xl bg-gray-50 border border-gray-200 mb-4">
+            <Wallet className="w-4 h-4 text-gray-500" />
+            <div>
+              <p className="text-xs text-gray-500">Your wallet balance</p>
+              <p className="text-sm font-medium text-gray-800">
+                {balances.sol.toFixed(4)} SOL | {balances.usdc.toFixed(2)} USDC
               </p>
             </div>
           </div>
