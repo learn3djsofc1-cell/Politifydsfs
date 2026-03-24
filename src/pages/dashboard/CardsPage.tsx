@@ -320,7 +320,6 @@ export const CardsPage = () => {
   const [createType, setCreateType] = useState<'visa' | 'mastercard'>('visa');
   const [creating, setCreating] = useState(false);
   const [actionLoading, setActionLoading] = useState<number | null>(null);
-  const [networkMode, setNetworkMode] = useState('devnet');
   const [balances, setBalances] = useState<WalletBalances>({ sol: 0, usdc: 0 });
   const [cardholderNameInput, setCardholderNameInput] = useState('');
 
@@ -336,7 +335,6 @@ export const CardsPage = () => {
       if (!res.ok) throw new Error('Failed to fetch cards');
       const data = await res.json();
       setCards(data.cards || []);
-      setNetworkMode(data.networkMode || 'devnet');
       setBalances(data.balances || { sol: 0, usdc: 0 });
     } catch {
       setError('Failed to load cards');
@@ -349,6 +347,10 @@ export const CardsPage = () => {
     setLoading(true);
     fetchCards();
   }, [fetchCards]);
+
+  useEffect(() => {
+    fetchCards();
+  }, [user?.networkMode]);
 
   const clearMessages = () => {
     setError('');
@@ -452,6 +454,7 @@ export const CardsPage = () => {
   const hasVisa = cards.some(c => c.card_type === 'visa');
   const hasMastercard = cards.some(c => c.card_type === 'mastercard');
   const canCreateMore = !hasVisa || !hasMastercard;
+  const networkMode = user?.networkMode || 'devnet';
   const isMainnet = networkMode === 'mainnet-beta';
 
   return (
