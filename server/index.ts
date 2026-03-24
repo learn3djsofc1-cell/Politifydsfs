@@ -1,5 +1,7 @@
 import express from 'express';
 import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { initDatabase } from './db.js';
 import authRoutes from './routes/auth.js';
 import walletRoutes from './routes/wallet.js';
@@ -11,7 +13,10 @@ import cardRoutes from './routes/cards.js';
 import networkRoutes from './routes/network.js';
 
 const app = express();
-const PORT = parseInt(process.env.API_PORT || '3001', 10);
+const isProduction = process.env.NODE_ENV === 'production';
+const PORT = parseInt(process.env.PORT || (isProduction ? '5000' : '3001'), 10);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 app.use(cors());
 app.use(express.json());
@@ -29,6 +34,13 @@ app.use('/api/chat', chatRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/cards', cardRoutes);
 app.use('/api/network', networkRoutes);
+
+const distPath = path.resolve(__dirname, '..', 'dist', 'public');
+app.use(express.static(distPath));
+app.get('*', (_req, res, next) => {
+  if (_req.path.startsWith('/api')) return next();
+  res.sendFile(path.join(distPath, 'index.html'));
+});
 
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error('Unhandled error:', err.message);

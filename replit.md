@@ -118,9 +118,11 @@ vite.config.ts
 - **wallets**: id (serial PK), user_id (FK → users), public_key, encrypted_private_key (AES-256-GCM), network, created_at
 
 ## Deployment
-Configured as a **static** deployment:
-- Build command: `npm run build`
-- Public directory: `dist`
+Configured as an **autoscale** deployment:
+- Build command: `npm run build` (builds Vite frontend to `dist/public/` + bundles Express server to `dist/index.mjs` via esbuild)
+- Run command: `node dist/index.mjs`
+- In production, Express serves both the API routes and the static frontend files
+- Server listens on `PORT` env var (defaults to 5000 in production, 3001 in development)
 
 ## API Keys & Integrations
 - **Helius RPC**: Used for Solana balance fetching (devnet + mainnet), key stored in `HELIUS_API_KEY` env var
